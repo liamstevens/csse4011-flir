@@ -4,6 +4,9 @@
 *.obj
 *.elf
 
+# Python Compiler
+*.pyc
+
 # Precompiled Headers
 *.gch
 *.pch
