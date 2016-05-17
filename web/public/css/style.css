@@ -1,0 +1,90 @@
+html, body
+{
+	min-width: 1000px;
+	min-height: 700px;
+	overflow:hidden;
+	
+	width: 100%;
+	height: 100%;
+
+	font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	background-color: rgba(0, 0, 0, 0.2);
+}
+
+*, *:before, *:after {
+  -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+ 
+.center {
+    text-align: center;
+    vertical-align: middle;
+	margin: 0 auto;
+	border: none !important;
+	padding: 0px !important;
+}
+
+
+#Header {
+	height: 50px;
+	border-bottom:1px solid black;
+}
+
+#Header h1 {
+	line-height:50px;
+	font-size:2.5em;
+}
+
+
+h2 {
+	padding-bottom: 10px;
+}
+
+select {
+	margin-bottom: 10px;
+}
+
+#Content {
+
+}
+
+#SideBar {
+	height:100vh;
+	width: 250px;
+
+	float:left;
+
+	border-right:1px solid black;
+}
+
+#SideBar h1 {
+	text-align: center;
+	font-size: 1.2em;
+	padding: 20px 0px;
+}
+
+#SideBar input,
+#SideBar select, 
+#SideBar span, 
+#SideBar textarea {
+	clear:both;
+	width: 80%;
+	margin-left: 10%;
+}
+
+#SideBar label {
+	margin-left: 10%;
+}
+
+#Display {
+	margin-left:250px;
+}
+
+#myCanvas {
+	height:100vh;
+	width:calc(100vh*(4/3));
+}
+
+#Footer {
+	clear: both;
+	height: 50px;
+}

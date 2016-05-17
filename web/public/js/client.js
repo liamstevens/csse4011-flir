@@ -10,9 +10,9 @@ function drawPGM (data) {
   let canvas = $("#myCanvas")[0]
   let ctx = canvas.getContext('2d')
 
-  canvas.height = 300
-  canvas.width = 400
-
+  canvas.height = 60
+  canvas.width = 80
+  
   let imageData = ctx.createImageData(width, height)
   let pixels = imageData.data
 
@@ -32,7 +32,6 @@ function drawPGM (data) {
     }
   }
 
-  ctx.scale(4,4)
   ctx.putImageData(imageData, 0, 0)
 }
 

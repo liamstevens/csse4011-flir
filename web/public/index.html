@@ -1,16 +1,54 @@
-<!DOCTYPE html PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<HTML>
-   <HEAD>
-      <TITLE>
-         A Small Hello 
-      </TITLE>
+<!DOCTYPE html>
+<HTML lang="en">
+  <HEAD>
+
+	<meta charset="utf-8">	
+
+	<TITLE> Group FLIR </TITLE>
+
+    <link rel="stylesheet" href="./css/reset.css">
+    <link rel="stylesheet" href="./css/style.css">
 
 	<script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+	
 	<script src="js/client.js"></script>
 
    </HEAD>
-<BODY>
-   <textarea id="message"></textarea>
-   <canvas id="myCanvas" width="300" height="400"></canvas>
-</BODY>
+
+	<BODY>
+
+		<div id="Header">
+			<div class="center">
+				<h1>Group FLIR <span id="HeaderConnectionStatus"> - Not Connected </span></h1>
+			</div>
+		</div>
+
+		<div id="Content">
+
+			<div id="SideBar">
+
+				<h1> Controls </h1>
+
+				<label for="ViewSelect">View: </label>
+				<select id="ViewSelect" >
+						<option value="cd">Data Overlay</option>
+						<option value="cv">Combined View</option>
+						<option value="vs">Raw Visible</option>
+						<option value="ir">Raw Infrared</option>
+				</select>
+
+				<label for="message">Messages: </label>
+				<textarea id="message"></textarea>
+
+			</div>
+
+			<div id="Display">
+
+				<canvas id="myCanvas"></canvas>
+
+			</div>
+
+		</div>
+
+	</BODY>
 </HTML>
