@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.13.4",
+    "unix-dgram": "^1.0.0",
     "ws": "^1.1.0"
   }
 }

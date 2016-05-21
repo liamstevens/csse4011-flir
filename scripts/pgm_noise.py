@@ -14,7 +14,6 @@ def write_to_file(data):
 
 def write_to_socket(data):
     sock.send(pgm_data)
-    print len(pgm_data)
 
 
 if __name__ == "__main__":

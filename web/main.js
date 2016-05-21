@@ -1,6 +1,11 @@
 
 var express = require('express');
 var app = express();
+var net = require('net');
+var fs = require('fs');
+var unix = require('unix-dgram');
+
+path = "/run/shm/cv2node"
 
 app.use(express.static('public'));
 
@@ -8,30 +13,21 @@ app.listen(8080, function () {
   console.log('Example app listening on port 8080!');
 });
 
+var server = unix.createSocket('unix_dgram');
 
-
-const dgram = require('dgram');
-const server = dgram.createSocket('udp4');
-
-server.on('error', (err) => {
-  console.log(`server error:\n${err.stack}`);
-  server.close();
-});
-
-server.on('message', (msg, rinfo) => {
-  console.log(`server got: msg from ${rinfo.address}:${rinfo.port}`);
-  //console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+server.on('message', (msg) => {
+  console.log(`server got msg: ${msg} `);
 
   wss.broadcast(msg);
 });
 
-server.on('listening', () => {
-  var address = server.address();
-  console.log(`server listening ${address.address}:${address.port}`);
+server.on('error', function(e) {
+  console.log(`server got err: ${e}`);
 });
 
-server.bind(41234);
-// server listening 0.0.0.0:41234
+try { fs.unlinkSync(path); } catch (ex) { }
+server.bind(path);
+
 
 var WebSocketServer = require('ws').Server
 var wss = new WebSocketServer({ port: 8081 });
