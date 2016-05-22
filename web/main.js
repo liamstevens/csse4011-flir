@@ -13,10 +13,15 @@ app.listen(8080, function () {
   console.log('Example app listening on port 8080!');
 });
 
+try { 
+  fs.unlinkSync(path);
+  fs.unlinkSync(path);
+} catch (ex) { }
+
 var server = unix.createSocket('unix_dgram');
 
 server.on('message', (msg) => {
-  console.log(`server got msg: ${msg} `);
+  // console.log(`server got msg`);
 
   wss.broadcast(msg);
 });
@@ -25,7 +30,6 @@ server.on('error', function(e) {
   console.log(`server got err: ${e}`);
 });
 
-try { fs.unlinkSync(path); } catch (ex) { }
 server.bind(path);
 
 

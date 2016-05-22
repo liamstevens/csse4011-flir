@@ -1,0 +1,71 @@
+
+#!/bin/bash   
+
+# Run the Node Server
+cd web
+node main.js > node.log 2>&1 &
+NODE_PID=$!
+cd ..
+
+sleep 1
+if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
+	echo "Node Server Started OK"
+
+	# Run the openCV Script
+	cd scripts
+	./opencv_rx.py > opencv.log 2>&1 &
+	OPENCV_PID=$!
+	cd ..
+
+	sleep 1
+	if kill -0 "$OPENCV_PID" >/dev/null 2>&1 ; then
+		echo "OpenCV Script Started OK"
+
+		# Run the PiCam
+		cd scripts
+		./mock_picamera.py > picam.log 2>&1 &
+		PICAM_PID=$!
+		cd ..
+
+		sleep 1
+		if kill -0 "$PICAM_PID" >/dev/null 2>&1 ; then
+			echo "Pi Camera Started OK"
+
+			# Run the FLIR
+			cd scripts
+			./pgm_noise.py > flir.log 2>&1 &
+			FLIR_PID=$!
+			cd ..
+
+			sleep 1
+			if kill -0 "$FLIR_PID" >/dev/null 2>&1 ; then
+				echo "FLIR Camera Started OK"
+
+				read -p "Press any key to exit..."
+
+				# Stop the FLIR
+				kill $FLIR_PID
+			else 
+				echo "FLIR Camera Failed to start"
+			fi
+
+			# Stop the PiCam
+			kill $PICAM_PID
+
+		else 
+			echo "Pi Camera Failed to start"
+		fi
+		
+		# Stop the openCV script
+		kill $OPENCV_PID
+
+	else 
+		echo "OpenCV Script Failed to start"
+	fi
+	
+	# Stop the Node Server
+	kill $NODE_PID
+
+else 
+	echo "Node Server Failed to start"
+fi

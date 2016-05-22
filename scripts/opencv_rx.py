@@ -66,6 +66,9 @@ try:
             combined_img[0:60,0:80,2] = combined_img[0:60,0:80,3]
             cv2.imshow( "combined_img", combined_img ); 
 
+            jpg = cv2.imencode('.jpeg', combined_img)[1].tostring()
+            nodejs.send(jpg)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

@@ -1,4 +1,20 @@
 
+var canvas;
+var ctx;
+
+
+
+$( document ).ready(function() {
+    console.log( "ready!" );
+
+    canvas = $("#myCanvas")[0]
+    ctx = canvas.getContext('2d')
+
+    canvas.height = 480
+    canvas.width = 640
+
+});
+
 function drawPGM (data) {
 
   let lines = data.split("\n")  
@@ -10,8 +26,8 @@ function drawPGM (data) {
   let canvas = $("#myCanvas")[0]
   let ctx = canvas.getContext('2d')
 
-  canvas.height = 60
-  canvas.width = 80
+  canvas.height = 480
+  canvas.width = 640
   
   let imageData = ctx.createImageData(width, height)
   let pixels = imageData.data
@@ -35,9 +51,23 @@ function drawPGM (data) {
   ctx.putImageData(imageData, 0, 0)
 }
 
+function drawJPG (data) {
+  var blob = new Blob([data], {type: "image/jpeg"});
+  var objectURL = URL.createObjectURL(blob);
+
+  var img = new Image();
+
+  img.onload = function() {
+    /// draw image to canvas
+    ctx.drawImage(this, 0, 0);
+    URL.revokeObjectURL(objectURL);
+  }
+  img.src = objectURL;
+}
+
 if ("WebSocket" in window)
 {
-   console.log("WebSocket is supported by your Browser!");
+   console.log("WebSocket is supported by your Browser");
    
    // Let us open a web socket
    var ws = new WebSocket("ws://localhost:8081/");
@@ -61,12 +91,15 @@ if ("WebSocket" in window)
       } else {
             
             var bytes = new Uint8Array(received_msg);
-            var string = new TextDecoder("utf-8").decode(bytes);
-            drawPGM(string);
+
+            drawJPG(bytes)
+
+            // var string = new TextDecoder("utf-8").decode(bytes);
+            // drawPGM(string);
           
       }
 
-      console.log("Message is received...");
+      // console.log("Message is received...");
       
    };
 	
