@@ -23,7 +23,7 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 
 		# Run the PiCam
 		cd scripts
-		./mock_picamera.py > picam.log 2>&1 &
+		./mock_picamera_static.py > picam.log 2>&1 &
 		PICAM_PID=$!
 		cd ..
 
@@ -33,7 +33,7 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 
 			# Run the FLIR
 			cd scripts
-			./pgm_noise.py > flir.log 2>&1 &
+			./mock_flir_static.py > flir.log 2>&1 &
 			FLIR_PID=$!
 			cd ..
 

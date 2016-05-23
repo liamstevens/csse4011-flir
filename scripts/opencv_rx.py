@@ -2,17 +2,10 @@
 import sys, os
 import socket, select
 
-from timeit import default_timer as timer
+import calendar, time
 
 import cv2
 import numpy as np
-
-# frames = 0
-# start = 0
-# if (start == 0): 
-#     start = timer    
-#     end = timer()
-#     time = (end - start)
 
 combined_img = np.zeros((480,640,4), np.uint8)
 
@@ -64,6 +57,9 @@ try:
             combined_img[0:60,0:80,0] = combined_img[0:60,0:80,3]
             combined_img[0:60,0:80,1] = combined_img[0:60,0:80,3]
             combined_img[0:60,0:80,2] = combined_img[0:60,0:80,3]
+
+            cv2.putText(combined_img, str(calendar.timegm(time.gmtime())), (420,40), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2,cv2.LINE_AA)
+
             cv2.imshow( "combined_img", combined_img ); 
 
             jpg = cv2.imencode('.jpeg', combined_img)[1].tostring()
