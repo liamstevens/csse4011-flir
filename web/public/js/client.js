@@ -2,8 +2,6 @@
 var canvas;
 var ctx;
 
-
-
 $( document ).ready(function() {
     console.log( "ready!" );
 
@@ -17,38 +15,38 @@ $( document ).ready(function() {
 
 function drawPGM (data) {
 
-  let lines = data.split("\n")  
+  // let lines = data.split("\n")  
 
-  let width = lines[1].split(" ")[0]
-  let height = lines[1].split(" ")[1]
-  let maxValue = lines[2]
+  // let width = lines[1].split(" ")[0]
+  // let height = lines[1].split(" ")[1]
+  // let maxValue = lines[2]
 
-  let canvas = $("#myCanvas")[0]
-  let ctx = canvas.getContext('2d')
+  // let canvas = $("#myCanvas")[0]
+  // let ctx = canvas.getContext('2d')
 
-  canvas.height = 480
-  canvas.width = 640
+  // canvas.height = 480
+  // canvas.width = 640
   
-  let imageData = ctx.createImageData(width, height)
-  let pixels = imageData.data
+  // let imageData = ctx.createImageData(width, height)
+  // let pixels = imageData.data
 
-  for (let y = 0; y < height; y++) {
+  // for (let y = 0; y < height; y++) {
 
-    row_data = lines[3+y].split(" ")
+  //   row_data = lines[3+y].split(" ")
 
 
-    for (let x = 0; x < width; x++) {
-      let rawValue = row_data[x]
-      let grayValue = rawValue / maxValue * 255
-      let pixelAddress = (x + y * width) * 4
-      pixels[pixelAddress] = grayValue
-      pixels[pixelAddress + 1] = grayValue
-      pixels[pixelAddress + 2] = grayValue
-      pixels[pixelAddress + 3] = 255
-    }
-  }
+  //   for (let x = 0; x < width; x++) {
+  //     let rawValue = row_data[x]
+  //     let grayValue = rawValue / maxValue * 255
+  //     let pixelAddress = (x + y * width) * 4
+  //     pixels[pixelAddress] = grayValue
+  //     pixels[pixelAddress + 1] = grayValue
+  //     pixels[pixelAddress + 2] = grayValue
+  //     pixels[pixelAddress + 3] = 255
+  //   }
+  // }
 
-  ctx.putImageData(imageData, 0, 0)
+  // ctx.putImageData(imageData, 0, 0)
 }
 
 function drawJPG (data) {
@@ -70,7 +68,8 @@ if ("WebSocket" in window)
    console.log("WebSocket is supported by your Browser");
    
    // Let us open a web socket
-   var ws = new WebSocket("ws://localhost:8081/");
+   var ws = new WebSocket("ws://"+window.location.hostname+":8081/");
+   console.log("Connected to: " + "ws://"+window.location.hostname+":8081/")
    ws.binaryType = "arraybuffer";
 	
    ws.onopen = function()
