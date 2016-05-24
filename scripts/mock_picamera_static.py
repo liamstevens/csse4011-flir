@@ -18,7 +18,7 @@ try:
         while True:
 
             sock.send(jpg)
-            sleep(0.125)
+            sleep(0.05)
 
 except Exception as e:
     print "Exception: " + str(e)

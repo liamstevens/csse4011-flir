@@ -2,7 +2,17 @@
 var canvas;
 var ctx;
 
+var ws;
+
+var draw_busy = 0;
+var frame_rate_start = 0;
+var frame_rate_end = 0
+var frame_rate_count = 0
+
+var img = new Image();
+
 $( document ).ready(function() {
+
     console.log( "ready!" );
 
     canvas = $("#myCanvas")[0]
@@ -11,70 +21,46 @@ $( document ).ready(function() {
     canvas.height = 480
     canvas.width = 640
 
+    $('#ViewSelect').on('change', function() {
+      ws.send("!V"+this.value);
+    });
+
 });
 
-function drawPGM (data) {
-
-  // let lines = data.split("\n")  
-
-  // let width = lines[1].split(" ")[0]
-  // let height = lines[1].split(" ")[1]
-  // let maxValue = lines[2]
-
-  // let canvas = $("#myCanvas")[0]
-  // let ctx = canvas.getContext('2d')
-
-  // canvas.height = 480
-  // canvas.width = 640
-  
-  // let imageData = ctx.createImageData(width, height)
-  // let pixels = imageData.data
-
-  // for (let y = 0; y < height; y++) {
-
-  //   row_data = lines[3+y].split(" ")
-
-
-  //   for (let x = 0; x < width; x++) {
-  //     let rawValue = row_data[x]
-  //     let grayValue = rawValue / maxValue * 255
-  //     let pixelAddress = (x + y * width) * 4
-  //     pixels[pixelAddress] = grayValue
-  //     pixels[pixelAddress + 1] = grayValue
-  //     pixels[pixelAddress + 2] = grayValue
-  //     pixels[pixelAddress + 3] = 255
-  //   }
-  // }
-
-  // ctx.putImageData(imageData, 0, 0)
-}
 
 function drawJPG (data) {
+
+  draw_busy = 1;
+
   var blob = new Blob([data], {type: "image/jpeg"});
   var objectURL = URL.createObjectURL(blob);
 
-  var img = new Image();
-
   img.onload = function() {
     /// draw image to canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(this, 0, 0);
     URL.revokeObjectURL(objectURL);
+    this.src = "";
+    draw_busy = 0;
   }
   img.src = objectURL;
 }
+
 
 if ("WebSocket" in window)
 {
    console.log("WebSocket is supported by your Browser");
    
    // Let us open a web socket
-   var ws = new WebSocket("ws://"+window.location.hostname+":8081/");
+   ws = new WebSocket("ws://"+window.location.hostname+":8081/");
    console.log("Connected to: " + "ws://"+window.location.hostname+":8081/")
    ws.binaryType = "arraybuffer";
 	
    ws.onopen = function()
    {
       // Web Socket is connected, send data using send()
+      $("#HeaderConnectionStatus").text(" - Connected ")
+
       ws.send("Message to send");
       console.log("Message is sent...");
    };
@@ -85,27 +71,47 @@ if ("WebSocket" in window)
 
 
       if (typeof received_msg === "string") {
-        var string = received_msg
-        $("#message").val(string);
+
+        if (received_msg[0] == '!') {
+          HandleCommands(received_msg)
+        } else {
+          $("#message").val(received_msg);
+        }
+
       } else {
             
             var bytes = new Uint8Array(received_msg);
 
-            drawJPG(bytes)
+            if (!draw_busy) {
+              drawJPG(bytes)
+            }
 
-            // var string = new TextDecoder("utf-8").decode(bytes);
-            // drawPGM(string);
-          
+
+            if (frame_rate_count == 0) {
+              frame_rate_start = new Date().getTime();
+            } else if (frame_rate_count == 9) {
+              frame_rate_end = new Date().getTime();
+
+              delta = (frame_rate_end - frame_rate_start);
+              fps = 10 / (delta/1000.0);
+              $("#message").val("FPS: " + fps);
+
+            }
+
+            frame_rate_count = (frame_rate_count + 1) % 10;
+
+
+
+
       }
 
-      // console.log("Message is received...");
-      
    };
 	
    ws.onclose = function()
    { 
       // websocket is closed.
       console.log("Connection is closed..."); 
+      $("#HeaderConnectionStatus").text(" - Disconnected ")
    };
 }
 
@@ -113,4 +119,21 @@ else
 {
    // The browser doesn't support WebSocket
    console.log("WebSocket NOT supported by your Browser!");
+   $("#HeaderConnectionStatus").text(" - WS NOT SUPPORTED ")
+}
+
+function HandleCommands (cmd) {
+
+  switch(cmd[1]) {
+
+    case 'V':
+      $('#ViewSelect').val(cmd[2]);
+      break;
+
+    default:
+
+      break;
+
+  }
+
 }
