@@ -11,6 +11,43 @@ def threshold_contour(image, ulim, llim):
     cv2.drawContours(image, contours, -1, (0, 255, 0), 2)
     cv2.imshow('frame', image)
 
+#Computes the difference in brightness between a sequence of frames.
+'''
+    Arguments:
+    @im_list: A list of images to analyse. Should have already been parsed by OpenCV (ie., they are numpy ndarrays)
+    @area_list: A list of ROIs, represented in tuples. Structed as (x, y, dx, dy). im_list[i] corresponds to area_list[i]. 
+                This is simply the rectangular area in which we are interested in.
+    @return A list of average luminances (one for each frame). For a large number of frames (minimum 30),
+            we can calculate a heartrate.
+'''
+def series_analyse(im_list, area_list)
+    for e in im_list:
+        a = area_list[im_list.index(e)] #Pretty dodgy. Could almost certainly do this more efficiently but it will do for now.
+        area = np.zeros(e.shape) #create a matrix with dimensions for e, filled with zeros. This needs the same dimensions as
+                                 #e for matrix multiplication.
+
+        #Now we fill the ROI of our matrix with 1s. This will cause only the area of interest to have values > 0.
+        #The alternative of this is:
+        #area = np.zeros(area_list[2]-area_list[0], area_list[3]-area_list[1])
+        #for i in range(area_list[0], area_list[2]):
+        #   for j in range(area_list[1], area_list[3]):
+        #       area[i-area_list[0], j-area_list[1]] = e[i,j]
+        #Assigning variables could optimize this - just not sure if it is faster to do it this way or not due to the way that
+        #numpy handles 2D arrays and their contiguity in memory.
+
+        for i in range(area_list[0], area_list[2]):
+            for j in range(area_list[1], area_list[3]):
+                area[i,j] = 1
+        #e = e * 
+        if(e > 0):
+            #compare previous image in ROI's luminance
+            #luminance can be computed from RGB value (if using colorised FLIR image this is fine)
+            #luminance is weighted sum of R, G and B values 
+            #L = 0.27R + 0.67G + 0.06B
+            #This is to match with human perception of brightness, this is prone to change depending on performance
+
+            
+            
 
 #To be used with gray colour maps (no transformation to gray, to save computation - essentially only feed this FLIR data)
 #im1 and im2 to be numpy arrays
