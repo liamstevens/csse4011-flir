@@ -3,9 +3,14 @@
 *.ko
 *.obj
 *.elf
+*.out
 
 # Python Compiler
 *.pyc
+
+#Image files
+*.jpg
+*.jpeg
 
 # Precompiled Headers
 *.gch
@@ -22,6 +27,7 @@
 *.so
 *.so.*
 *.dylib
+*.dat
 
 # Executables
 *.exe
