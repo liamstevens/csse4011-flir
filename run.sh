@@ -12,7 +12,7 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 	echo "Node Server Started OK"
 
 	# Run the openCV Script
-	cd scripts
+	cd image-processing
 	./opencv_rx.py > opencv.log 2>&1 &
 	OPENCV_PID=$!
 	cd ..
