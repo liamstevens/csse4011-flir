@@ -10,7 +10,7 @@ def face_cascade(cascade, image, gflag=True):
 
 def detections_draw(image, detections):
     for (x, y, w, h) in detections:
-        print "({0}, {1}, {2}, {3})".format(x, y, w, h)
+        # print "({0}, {1}, {2}, {3})".format(x, y, w, h)
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
 def main(argv = None):
