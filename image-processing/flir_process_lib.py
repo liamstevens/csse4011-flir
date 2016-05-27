@@ -21,34 +21,42 @@ def threshold_contour(image, ulim, llim):
             we can calculate a heartrate.
 '''
 def series_analyse(im_list, area_list)
+    out = []
     for e in im_list:
         a = area_list[im_list.index(e)] #Pretty dodgy. Could almost certainly do this more efficiently but it will do for now.
         area = np.zeros(e.shape) #create a matrix with dimensions for e, filled with zeros. This needs the same dimensions as
                                  #e for matrix multiplication.
 
         #Now we fill the ROI of our matrix with 1s. This will cause only the area of interest to have values > 0.
-        #The alternative of this is:
-        #area = np.zeros(area_list[2]-area_list[0], area_list[3]-area_list[1])
-        #for i in range(area_list[0], area_list[2]):
-        #   for j in range(area_list[1], area_list[3]):
-        #       area[i-area_list[0], j-area_list[1]] = e[i,j]
+        #############The alternative of this is:###################
+        ####################area = np.zeros(area_list[2]-area_list[0], area_list[3]-area_list[1])
+        ####################for i in range(area_list[0], area_list[2]):
+        ####################   for j in range(area_list[1], area_list[3]):
+        ####################       area[i-area_list[0], j-area_list[1]] = e[i,j]
         #Assigning variables could optimize this - just not sure if it is faster to do it this way or not due to the way that
         #numpy handles 2D arrays and their contiguity in memory.
 
         for i in range(area_list[0], area_list[2]):
             for j in range(area_list[1], area_list[3]):
                 area[i,j] = 1
-        #e = e * 
+        e = e * area 
         if(e > 0):
             #compare previous image in ROI's luminance
+            res = np.subtract(e, im_list[im_list.index(e)-1]) 
+
+            #NOTE - This difference may need to be scaled in order for it to be significant. Gain required may actually be quite high.
+            #Take RGB mean
+            means = cv2.mean(res)
             #luminance can be computed from RGB value (if using colorised FLIR image this is fine)
             #luminance is weighted sum of R, G and B values 
             #L = 0.27R + 0.67G + 0.06B
             #This is to match with human perception of brightness, this is prone to change depending on performance
+            val = (means[0]*0.27) + (means[1]*0.67) + (means[2]*0.06)
+            #Append to end of output list
+            out.append(val)
 
+    return out
             
-            
-
 #To be used with gray colour maps (no transformation to gray, to save computation - essentially only feed this FLIR data)
 #im1 and im2 to be numpy arrays
 def img_bright_diff(im1, im2):
