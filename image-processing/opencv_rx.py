@@ -10,9 +10,9 @@ import numpy as np
 
 import face_test as ft
 
-combined_img = np.zeros((480,640,3), np.uint8)
-pi_cam_img = np.zeros((480,640,3), np.uint8)
-flir_img = np.zeros((60,80,1), np.uint8)
+# combined_img = np.zeros((480,640,3), np.uint8)
+# pi_cam_img = np.zeros((480,640,3), np.uint8)
+# flir_img = np.zeros((60,80,1), np.uint8)
 
 epoll = select.epoll()
 cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
@@ -21,8 +21,12 @@ socket_buf_size = 0
 
 def main():
 
+    jpg_quality = 95
     picam_ready = 0
     flir_ready = 0
+
+    jpg = []
+    pgm = []
 
     try:
 
@@ -42,18 +46,10 @@ def main():
 
                 if (picam_rx.fileno() == fileno):
                     jpg = picam_rx.recv(socket_buf_size)
-                    nparr = np.fromstring(jpg, np.uint8)
-                    pi_cam_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                    # cv2.imshow( "PiCam", pi_cam_img );
-
                     picam_ready = 1
 
                 if (flir_rx.fileno() == fileno):
                     pgm = flir_rx.recv(socket_buf_size)
-                    nparr = np.fromstring(pgm, np.uint8)
-                    flir_img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
-                    # cv2.imshow( "FLIR", flir_img );
-
                     flir_ready = 1
 
                 if (node_rx.fileno() == fileno):
@@ -63,10 +59,23 @@ def main():
             if (picam_ready != 1 or flir_ready != 1):
                 continue
 
+            nparr = np.fromstring(jpg, np.uint8)
+            pi_cam_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+            nparr = np.fromstring(pgm, np.uint8)
+            flir_img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+
             combined_img = do_stuff(pi_cam_img, flir_img)
 
-            jpg = cv2.imencode('.jpeg', combined_img)[1].tostring()
+            jpg = cv2.imencode('.jpeg', combined_img,  [int(cv2.IMWRITE_JPEG_QUALITY), jpg_quality])[1].tostring()
             node_tx.send(jpg)
+
+            if (len(jpg) > 58000):
+                if (jpg_quality > 0):
+                    jpg_quality = jpg_quality - 1
+            else:
+                if (jpg_quality < 95):
+                    jpg_quality = jpg_quality + 1
 
             picam_ready = 0
             flir_ready = 0
