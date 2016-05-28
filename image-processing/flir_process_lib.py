@@ -20,29 +20,21 @@ def threshold_contour(image, ulim, llim):
     @return A list of average luminances (one for each frame). For a large number of frames (minimum 30),
             we can calculate a heartrate.
 '''
-def series_analyse(im_list, area_list)
+def series_analyse(im_list, area_list):
     out = []
     for e in im_list:
         a = area_list[im_list.index(e)] #Pretty dodgy. Could almost certainly do this more efficiently but it will do for now.
-        area = np.zeros(e.shape) #create a matrix with dimensions for e, filled with zeros. This needs the same dimensions as
-                                 #e for matrix multiplication.
 
-        #Now we fill the ROI of our matrix with 1s. This will cause only the area of interest to have values > 0.
-        #############The alternative of this is:###################
-        ####################area = np.zeros(area_list[2]-area_list[0], area_list[3]-area_list[1])
-        ####################for i in range(area_list[0], area_list[2]):
-        ####################   for j in range(area_list[1], area_list[3]):
-        ####################       area[i-area_list[0], j-area_list[1]] = e[i,j]
+        area = np.zeros(area_list[2]-area_list[0], area_list[3]-area_list[1])
+        for i in range(area_list[0], area_list[2]):
+            for j in range(area_list[1], area_list[3]):
+                area[i-area_list[0], j-area_list[1]] = e[i,j]
         #Assigning variables could optimize this - just not sure if it is faster to do it this way or not due to the way that
         #numpy handles 2D arrays and their contiguity in memory.
 
-        for i in range(area_list[0], area_list[2]):
-            for j in range(area_list[1], area_list[3]):
-                area[i,j] = 1
-        e = e * area 
         if(e > 0):
-            #compare previous image in ROI's luminance
-            res = np.subtract(e, im_list[im_list.index(e)-1]) 
+            #compare previous image in ROI's luminance - commented out for now as unsure if this is wise - may be floored due to low difference
+            #res = np.subtract(e, im_list[im_list.index(e)-1]) 
 
             #NOTE - This difference may need to be scaled in order for it to be significant. Gain required may actually be quite high.
             #Take RGB mean
@@ -51,7 +43,7 @@ def series_analyse(im_list, area_list)
             #luminance is weighted sum of R, G and B values 
             #L = 0.27R + 0.67G + 0.06B
             #This is to match with human perception of brightness, this is prone to change depending on performance
-            val = (means[0]*0.27) + (means[1]*0.67) + (means[2]*0.06)
+            val = (means[2]*0.27) + (means[1]*0.67) + (means[0]*0.06)
             #Append to end of output list
             out.append(val)
 
