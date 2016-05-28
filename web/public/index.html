@@ -29,14 +29,62 @@
 
 				<h1> Controls </h1>
 
-				<label for="ViewSelect">View: </label>
-				<select id="ViewSelect" >
-						<option value="4">Data Overlay</option>
-						<option value="3">Combined View</option>
-						<option value="2">Raw Visible</option>
-						<option value="1">Raw Infrared</option>
-						<option value="0">Disabled</option>
-				</select>
+                <div id="VideoControls">
+                <fieldset>          
+                    <legend>Video Output Controls</legend>
+    
+        				<label for="ViewSelect">View: </label>
+        				<select id="ViewSelect" >
+        					<option value="4">Data Overlay</option>
+        					<option value="3">Combined View</option>
+        					<option value="2">Raw Visible</option>
+        					<option value="1">Raw Infrared</option>
+        					<option value="0">Disabled</option>
+        				</select>
+                        <div class="Left">
+                            <label for="FPSCap">FPS: </label>
+                            <input id="FPS" type="number" readonly="readonly">
+                        </div>
+                        <div class="Right">
+                            <label for="FPSCap">FPS Cap: </label>
+                            <input id="FPSCap" type="number" min="1" max="10" value="10">
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div id="OverlayControls">
+                    <fieldset>
+                        <legend>Overlay Controls</legend>
+                        <div class="Left">
+                            <label for="OverXPos">X Pos: </label>
+                            <input id="OverXPos" type="number" min="0" max="640" value="0">
+                        
+                            <label for="OverXSize">X Size: </label>
+                            <input id="OverXSize" type="number" min="0" max="640" value="80">
+                        </div>
+
+                        <div class="Right">
+                            <label for="OverYPos">Y Pos: </label>
+                            <input id="OverYPos" type="number" min="0" max="640" value="0">
+                        
+                            <label for="OverYSize">Y Size: </label>
+                            <input id="OverYSize" type="number" min="0" max="640" value="80">
+                        </div>
+                    </fieldset> 
+                </div>
+
+                <div id="FDControls">
+                    <fieldset>
+                        <legend>Face Detection Controls</legend>
+                        <div class="Left" style="width:70%">
+                            <label for="MultiFD">Multi-Face Detection: </label>
+                        </div>
+                        
+                        <div class="Right" style="width:30%">
+                            <input type="checkbox" id="MultiFD" checked> 
+                        </div>
+                    </fieldset>
+                </div>
 
 				<label for="message">Messages: </label>
 				<textarea id="message"></textarea>
