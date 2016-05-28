@@ -28,6 +28,8 @@ def main():
     jpg = []
     pgm = []
 
+    cv2.setNumThreads(2)
+
     try:
 
         node_tx = uds_connect("/run/shm/cv2node")
@@ -120,7 +122,7 @@ def do_stuff(image1, image2):
 
     cv2.putText(image1, str(calendar.timegm(time.gmtime())), (420,40), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2,cv2.LINE_AA)
 
-    cv2.imshow( "Stuff Done", image1 )
+    # cv2.imshow( "Stuff Done", image1 )
 
     return image1
 
