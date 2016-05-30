@@ -1,9 +1,36 @@
+#!/bin/bash
 
-#!/bin/bash   
+MODE="PI"
+if [ "$#" -gt 0 ]; then
+	MODE="$1"
+fi
+
+NODE_PATH="web"
+NODE_FILE="main.js"
+
+CV_PATH="image-processing"
+CV_FILE="opencv_rx.py"
+
+if [ $MODE = "USB" ]; then
+	echo "Starting in USB mode"
+	CAP_PATH="scripts"
+	PICAM_FILE="mock_picamera_usb.py" 
+	FLIR_FILE="pgm_noise.py"
+elif [ $MODE = "STATIC" ]; then
+	echo "Starting in STATIC mode"
+	CAP_PATH="scripts"
+	PICAM_FILE="mock_picamera_static.py"
+	FLIR_FILE="mock_flir_static.py"
+else
+	echo "Starting in PI mode"
+	CAP_PATH="capture"
+	PICAM_FILE="picamera.py"
+	FLIR_FILE="lepton"
+fi
 
 # Run the Node Server
-cd web
-node main.js > node.log 2>&1 &
+cd $NODE_PATH
+node $NODE_FILE > node.log 2>&1 &
 NODE_PID=$!
 cd ..
 
@@ -12,8 +39,8 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 	echo "Node Server Started OK"
 
 	# Run the openCV Script
-	cd image-processing
-	./opencv_rx.py > opencv.log 2>&1 &
+	cd $CV_PATH
+	./$CV_FILE > opencv.log 2>&1 &
 	OPENCV_PID=$!
 	cd ..
 
@@ -22,8 +49,8 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 		echo "OpenCV Script Started OK"
 
 		# Run the PiCam
-		cd scripts
-		./mock_picamera_static.py > picam.log 2>&1 &
+		cd $CAP_PATH
+		./$PICAM_FILE > picam.log 2>&1 &
 		PICAM_PID=$!
 		cd ..
 
@@ -32,8 +59,8 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 			echo "Pi Camera Started OK"
 
 			# Run the FLIR
-			cd scripts
-			./mock_flir_static.py > flir.log 2>&1 &
+			cd $CAP_PATH
+			./$FLIR_FILE > flir.log 2>&1 &
 			FLIR_PID=$!
 			cd ..
 

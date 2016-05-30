@@ -3,4 +3,4 @@ CFLAGS=-I$(IDIR)
 LIBS=-lm
 
 make:
-	gcc -o lepton_streamer Lepton_Streamer.c $^ $(CFLAGS) $(LIBS) -std=gnu99
+	gcc -o lepton Lepton_Streamer.c $^ $(CFLAGS) $(LIBS) -std=gnu99

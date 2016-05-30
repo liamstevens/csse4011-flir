@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -u
 
 import sys, os
 import socket, select
@@ -28,7 +28,7 @@ def main():
     jpg = []
     pgm = []
 
-    cv2.setNumThreads(2)
+    cv2.setNumThreads(0)
 
     try:
 
@@ -52,6 +52,7 @@ def main():
 
                 if (flir_rx.fileno() == fileno):
                     pgm = flir_rx.recv(socket_buf_size)
+                    print "GOT: " + str(len(pgm))
                     flir_ready = 1
 
                 if (node_rx.fileno() == fileno):
@@ -65,7 +66,7 @@ def main():
             pi_cam_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
             nparr = np.fromstring(pgm, np.uint8)
-            flir_img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+            flir_img = np.reshape(nparr, (60, 80))
 
             combined_img = do_stuff(pi_cam_img, flir_img)
 
@@ -116,11 +117,18 @@ def uds_connect(path):
     return sock
 
 def do_stuff(image1, image2):
-    
+
     detections = ft.face_cascade(cascade, image1, False)
     ft.detections_draw(image1, detections)
 
     cv2.putText(image1, str(calendar.timegm(time.gmtime())), (420,40), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2,cv2.LINE_AA)
+
+    # image_out[:,:,0:3] = image1[:,:,:]
+    # image_out[0:60,0:80,4] = image2[0:60,0:80]
+
+    image1[0:60,0:80,0] = image2[0:60,0:80]
+    image1[0:60,0:80,1] = image2[0:60,0:80]
+    image1[0:60,0:80,2] = image2[0:60,0:80]
 
     # cv2.imshow( "Stuff Done", image1 )
 

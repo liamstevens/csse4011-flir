@@ -15,10 +15,13 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/un.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 #define PORT 8888
 #define BUFSIZE 512
+
+const char* uds_path = "/run/shm/flir2cv";
 
 /* Function Prototypes */
 static void send_image(void);
@@ -38,70 +41,46 @@ static uint16_t delay;
 #define VOSPI_FRAME_SIZE (164)
 uint8_t lepton_frame_packet[VOSPI_FRAME_SIZE];
 
-static unsigned int image_data[60][80];
+static uint8_t image_data[60][80];
 
 int main(int argc, char **argv)
 {
-	struct sockaddr_in myaddr; /* our address */ 
-    struct sockaddr_in remaddr; /* remote address */ 
-    socklen_t addrlen = sizeof(remaddr); /* length of addresses */ 
-    int recvlen; /* # bytes received */ 
-    int fd; /* our socket */ 
-    unsigned char buf[BUFSIZE]; /* receive buffer */
 
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) 
-	{ 
+	struct sockaddr_un addr;
+	int fd;
+
+	if ( (fd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
 		error("cannot create socket\n"); 
-		return 0; 
+		return -1; 
 	}
 
-	memset((char *)&myaddr, 0, sizeof(myaddr)); 
-	myaddr.sin_family = AF_INET; 
-	myaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-	myaddr.sin_port = htons(PORT);
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strncpy(addr.sun_path, uds_path, sizeof(addr.sun_path)-1);
 
-	if (bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr)) < 0) 
-	{ 
-		error("bind failed"); 
-		return 0; 
+	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+		error("connect error");
+		exit(-1);
 	}
 
 	int sent = 0;
 
     for (;;)
     {
-    	printf("waiting on port %d\n", PORT); 
 
-    	recvlen = recvfrom(fd, buf, BUFSIZE, 0, (struct sockaddr *)&remaddr, &addrlen); 
-    	printf("received %d bytes\n", recvlen); 
+		usleep(80000);
 
-    	if (recvlen > 0) 
-    	{ 
-    		buf[recvlen] = 0; 
-    		printf("received message: \"%s\"\n", buf); 
+		if (get_image() != 1)
+		{
+			printf("couldn't get camera data\n");
+			continue;
+		}
 
-    		/* Stream the data!!! */
-    		for (;;)
-    		{
+		// printf("Data from camera received\n");
+		//save_numpy_file();
 
-	    		if (get_image() == 1)
-				{
-					printf("Data from camera received\n");
-					//save_numpy_file();
-
-					sent = sendto(fd, image_data, sizeof(unsigned int) * 60 * 80, 0, (struct sockaddr *)&remaddr, addrlen);
-					printf("Sent: %d\n", sent);
-				}
-				else
-				{
-					printf("couldn't get camera data\n");
-				}
-
-				usleep(80000);
-
-			}
-
-    	}
+		sent = sendto(fd, image_data, sizeof(uint8_t) * 60 * 80, 0, NULL, 0);
+		// printf("Sent: %d\n", sent);
     	
 	}
 }
@@ -180,7 +159,7 @@ int transfer(int fd)
 		{
 			for(i=0;i<80;i++)
 			{
-				image_data[frame_number][i] = (lepton_frame_packet[2*i+4] << 8 | lepton_frame_packet[2*i+5]);
+				image_data[frame_number][i] = lepton_frame_packet[2*i+4]; //(lepton_frame_packet[2*i+4] << 8 | lepton_frame_packet[2*i+5]);
 			}
 		}
 	}

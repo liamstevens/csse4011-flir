@@ -13,7 +13,10 @@ try:
 
     with open('test_images/test_ir.pgm', 'r') as flir_file:
 
-        flir = flir_file.read()
+        flir_str = flir_file.read()
+
+        nparr = np.fromstring(flir_str, np.uint8)
+        flir = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
     
         while True:
 
