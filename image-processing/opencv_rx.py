@@ -156,6 +156,9 @@ def do_output(image, detections):
     # Do transformation on incoming image
 
     result_image = rgb_component
+    result_image[0:60,0:80,0] = ir_component[0:60,0:80,0]
+    result_image[0:60,0:80,1] = ir_component[0:60,0:80,0]
+    result_image[0:60,0:80,2] = ir_component[0:60,0:80,0]
 
     ft.detections_draw(result_image, detections)
 
