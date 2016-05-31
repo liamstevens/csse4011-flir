@@ -17,7 +17,7 @@ import face_test as ft
 epoll = select.epoll()
 cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
-socket_buf_size = 0
+socket_buf_size = 1*1024*1024
 
 def main():
 
@@ -105,14 +105,17 @@ def uds_bind(path):
     sock.setblocking(0)
     epoll.register(sock.fileno(), select.EPOLLIN)
 
-    if (socket_buf_size == 0):
-        socket_buf_size = sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
+    #if (socket_buf_size == 0):
+    #    socket_buf_size = sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
 
     return sock
 
 def uds_connect(path):
 
+    global socket_buf_size
+
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF,socket_buf_size)
     sock.connect(path)
     return sock
 

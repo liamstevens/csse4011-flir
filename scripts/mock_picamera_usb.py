@@ -14,6 +14,7 @@ if (cap.isOpened() == False):
 try:
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1*1024*1024)
     sock.connect("/run/shm/pi2cv")
     
     while True:
