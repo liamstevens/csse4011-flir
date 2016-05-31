@@ -6,8 +6,8 @@ import time
 
 import picamera
 
-w_res = 640
-h_res = 480
+w_res = 320
+h_res = 240
 fps = 10
 
 print picamera

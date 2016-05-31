@@ -18,8 +18,8 @@ $( document ).ready(function() {
     canvas = $("#myCanvas")[0]
     ctx = canvas.getContext('2d')
 
-    canvas.height = 480
-    canvas.width = 640
+    canvas.height = 240
+    canvas.width = 320
 
     $('#ViewSelect').on('change', function() {
       ws.send("!V"+this.value);

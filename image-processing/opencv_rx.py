@@ -30,7 +30,7 @@ def main():
     jpg = []
     pgm = []
 
-    cv2.setNumThreads(2)
+    cv2.setNumThreads(3)
 
     try:
 
