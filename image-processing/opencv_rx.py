@@ -20,7 +20,7 @@ cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 socket_buf_size = 1*1024*1024
 
 # GLOBAL CONFIGURABLES
-save_file_enable = True
+save_file_enable = False
 
 def main():
     
