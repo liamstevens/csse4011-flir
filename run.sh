@@ -24,7 +24,7 @@ elif [ $MODE = "STATIC" ]; then
 else
 	echo "Starting in PI mode"
 	CAP_PATH="capture"
-	PICAM_FILE="picamera.py"
+	PICAM_FILE="cap_picam.py"
 	FLIR_FILE="lepton"
 fi
 

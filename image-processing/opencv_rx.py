@@ -19,6 +19,8 @@ cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
 socket_buf_size = 1*1024*1024
 
+save_file_enable = False
+
 def main():
 
     jpg_quality = 95
@@ -52,7 +54,6 @@ def main():
 
                 if (flir_rx.fileno() == fileno):
                     pgm = flir_rx.recv(socket_buf_size)
-                    print "GOT: " + str(len(pgm))
                     flir_ready = 1
 
                 if (node_rx.fileno() == fileno):
@@ -119,7 +120,18 @@ def uds_connect(path):
     sock.connect(path)
     return sock
 
+frame = 0
 def do_stuff(image1, image2):
+
+    global frame
+
+    if (save_file_enable == True):
+        # Write image1 to file
+        cv2.imwrite("out_data/cam/"+str(frame)+".jpg", image1)
+        # Write image2 to file
+        cv2.imwrite("out_data/flir/"+str(frame)+".pgm", image2)
+
+    frame = frame + 1
 
     detections = ft.face_cascade(cascade, image1, False)
     ft.detections_draw(image1, detections)

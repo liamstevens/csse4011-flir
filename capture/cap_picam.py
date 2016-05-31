@@ -10,6 +10,8 @@ w_res = 640
 h_res = 480
 fps = 10
 
+print picamera
+
 try:
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
