@@ -10,7 +10,7 @@ import numpy as np
 
 import face_test as ft
 
-# combined_img = np.zeros((480,640,3), np.uint8)
+# 
 # pi_cam_img = np.zeros((480,640,3), np.uint8)
 # flir_img = np.zeros((60,80,1), np.uint8)
 
@@ -19,11 +19,11 @@ cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
 socket_buf_size = 1*1024*1024
 
-save_file_enable = False
+# GLOBAL CONFIGURABLES
+save_file_enable = True
 
 def main():
-
-    jpg_quality = 95
+    
     picam_ready = 0
     flir_ready = 0
 
@@ -58,7 +58,7 @@ def main():
 
                 if (node_rx.fileno() == fileno):
                     cmd = node_rx.recv(socket_buf_size)
-                    #handle command here
+                    handle_cmd(cmd)
 
             if (picam_ready != 1 or flir_ready != 1):
                 continue
@@ -69,29 +69,22 @@ def main():
             nparr = np.fromstring(pgm, np.uint8)
             flir_img = np.reshape(nparr, (60, 80))
 
-            combined_img = do_stuff(pi_cam_img, flir_img)
+            combined_img, detections = do_processing(pi_cam_img, flir_img)
+            out_img = do_output(combined_img, detections)
 
-            jpg = cv2.imencode('.jpeg', combined_img,  [int(cv2.IMWRITE_JPEG_QUALITY), jpg_quality])[1].tostring()
-            node_tx.send(jpg)
-
-            if (len(jpg) > 58000):
-                if (jpg_quality > 0):
-                    jpg_quality = jpg_quality - 1
-            else:
-                if (jpg_quality < 95):
-                    jpg_quality = jpg_quality + 1
+            node_tx.send(out_img)
 
             picam_ready = 0
             flir_ready = 0
-
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
 
     except Exception as e:
         print "Exception: " + str(e)
 
     finally:
         print "Exiting"
+
+def handle_cmd(cmd):
+    print "Got Command: " + cmd
 
 def uds_bind(path):
 
@@ -106,9 +99,6 @@ def uds_bind(path):
     sock.setblocking(0)
     epoll.register(sock.fileno(), select.EPOLLIN)
 
-    #if (socket_buf_size == 0):
-    #    socket_buf_size = sock.getsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF)
-
     return sock
 
 def uds_connect(path):
@@ -120,34 +110,67 @@ def uds_connect(path):
     sock.connect(path)
     return sock
 
-frame = 0
-def do_stuff(image1, image2):
 
+def do_processing(image1, image2):
+
+    # TODO: Crop image1 to smaller size to match 
+
+    combined_img = np.zeros((image1.shape[0],image1.shape[1],4), np.uint8)
+
+    # cv2.mixChannels( [image1, image2], [combined_img], [0,0, 1,1, 2,2, 3,3] )
+    combined_img[:,:,0:3] = image1
+    combined_img[0:60,0:80,3] = image2
+
+    detections = ft.face_cascade(cascade, combined_img, False)
+
+    return (combined_img, detections)
+
+jpg_quality = 95
+frame = -1
+directory = "out_data/"+time.strftime("%Y%m%d-%H%M%S")
+def do_output(image, detections):
+
+    global jpg_quality
     global frame
 
-    if (save_file_enable == True):
-        # Write image1 to file
-        cv2.imwrite("out_data/cam/"+str(frame)+".jpg", image1)
-        # Write image2 to file
-        cv2.imwrite("out_data/flir/"+str(frame)+".pgm", image2)
+    result_image = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
+
+    rgb_component = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
+    ir_component = np.zeros((image.shape[0],image.shape[1],1), np.uint8)
+
+    cv2.mixChannels( [image], [rgb_component, ir_component], [0,0, 1,1, 2,2, 3,3] )
 
     frame = frame + 1
 
-    detections = ft.face_cascade(cascade, image1, False)
-    ft.detections_draw(image1, detections)
+    if (save_file_enable == True):
 
-    cv2.putText(image1, str(calendar.timegm(time.gmtime())), (420,40), cv2.FONT_HERSHEY_SIMPLEX, 1,(0,0,0),2,cv2.LINE_AA)
+        if (frame == 0):
+            os.makedirs(directory+"/cam/")
+            os.makedirs(directory+"/flir/")
 
-    # image_out[:,:,0:3] = image1[:,:,:]
-    # image_out[0:60,0:80,4] = image2[0:60,0:80]
+        # Write image1 to file
+        cv2.imwrite(directory+"/cam/"+str(frame)+".jpg", rgb_component)
+        # Write image2 to file
+        cv2.imwrite(directory+"/flir/"+str(frame)+".pgm", ir_component)
 
-    image1[0:60,0:80,0] = image2[0:60,0:80]
-    image1[0:60,0:80,1] = image2[0:60,0:80]
-    image1[0:60,0:80,2] = image2[0:60,0:80]
+    # Do transformation on incoming image
 
-    # cv2.imshow( "Stuff Done", image1 )
+    result_image = rgb_component
 
-    return image1
+    ft.detections_draw(result_image, detections)
+
+    cv2.putText(result_image, str(calendar.timegm(time.gmtime())), (210,20), cv2.FONT_HERSHEY_SIMPLEX, .5,(0,0,0),1,cv2.LINE_AA)
+
+    out_img = cv2.imencode('.jpeg', result_image,  [int(cv2.IMWRITE_JPEG_QUALITY), jpg_quality])[1].tostring()
+
+    if (len(out_img) > 58000):
+        if (jpg_quality > 0):
+            jpg_quality = jpg_quality - 1
+    else:
+        if (jpg_quality < 95):
+            jpg_quality = jpg_quality + 1
+
+    return out_img
 
 if __name__ == "__main__":
 

@@ -13,7 +13,7 @@ try:
     #print "SND Size: " + str(sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF))
     sock.connect("/run/shm/pi2cv")
 
-    with open('test_images/test_wc.jpg', 'r') as jpg_file:
+    with open('test_images/test_wc3.jpg', 'r') as jpg_file:
 
         jpg = jpg_file.read()
 
