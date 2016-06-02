@@ -39,3 +39,9 @@
 
 # Debug files
 *.dSYM/
+
+# Log Files
+*.log
+
+
+

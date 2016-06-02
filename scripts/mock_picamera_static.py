@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -u
 import sys, os
 import socket
 from time import sleep
@@ -9,9 +9,11 @@ import numpy as np
 try:
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 1*1024*1024)
+    #print "SND Size: " + str(sock.getsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF))
     sock.connect("/run/shm/pi2cv")
 
-    with open('test_images/test_wc2.jpg', 'r') as jpg_file:
+    with open('test_images/test_wc3.jpg', 'r') as jpg_file:
 
         jpg = jpg_file.read()
 
