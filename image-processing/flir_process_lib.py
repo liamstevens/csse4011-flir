@@ -1,10 +1,6 @@
 import cv2, sys
 import numpy as np
-#import scipy.signal as sci
 from scipy.signal import savgol_filter
-#import scikit-learn as skl
-#import matplotlib.pyplot as mpl
-#TODO inspect contents of contours for use in clustering
 
 #Function to draw lines around objects of at least llim intensity
 def threshold_contour(image, ulim, llim):
@@ -30,28 +26,8 @@ def series_analyse(im_list, area_list):
         mask = mask_image(e, a)
         val = mean_luminance(mask)
         out.append(val)
-        '''
-        area = np.zeros(area_list[2]-area_list[0], area_list[3]-area_list[1])
-        for i in range(area_list[0], area_list[2]):
-            for j in range(area_list[1], area_list[3]):
-                area[i-area_list[0], j-area_list[1]] = e[i,j]
-        #Assigning variables could optimize this - just not sure if it is faster to do it this way or not due to the way that
-        #numpy handles 2D arrays and their contiguity in memory.
-
-        if(imlist.index(e) > 0):
-            #compare previous image in ROI's luminance - commented out for now as unsure if this is wise - may be floored due to low difference
-            #res = np.subtract(e, im_list[im_list.index(e)-1]) 
-
-            #NOTE - This difference may need to be scaled in order for it to be significant. Gain required may actually be quite high.
-            #means = cv2.mean(res)
-            #This is to match with human perception of brightness, this is prone to change depending on performance
-            #val = (means[2]*0.27) + (means[1]*0.67) + (means[0]*0.06)
-            #Append to end of output list
-            val = mean_luminance(e)
-            out.append(val)
-            '''
-
     return out
+
 '''
     Find the dominant frequency, typically this translates to the heartbeat.
     There is likely a lot of low frequency response, which needs to be ignored.
@@ -142,7 +118,6 @@ def face_cascade(cascade, image, gflag=True):
 
 def detections_draw(image, detections):
     for (x, y, w, h) in detections:
-        # print "({0}, {1}, {2}, {3})".format(x, y, w, h)
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
 
@@ -187,20 +162,6 @@ def main():
     #mpl.plot([vals])
     #mpl.ylabel("Variance in mean luminance of images")
     #mpl.show()
-    '''
-    while(True):
-        #pull webcam image and draw contours around lighter parts of the image
-        #In actual application it may be worth doing grayscale conversions in mainloop to avoid extra computation time
-        cap = cv2.VideoCapture(0)
-        ret, image = cap.read()
-        threshold_contour(image, 255, 127)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break;
-
-    cap.release()
-    cv2.destroyAllWindows()
-    '''
 if __name__ == "__main__":
     sys.exit(main())
     
