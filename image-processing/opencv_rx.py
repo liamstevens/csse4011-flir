@@ -25,7 +25,17 @@ socket_buf_size = 1*1024*1024
 save_file_enable = False
 multiple_faces = True
 colorize = True
-output_view = 1
+output_view = 3
+overlay_pc = 30
+
+x_pos  = 0
+x_size = 80
+y_pos  = 0
+y_size = 60
+
+jpg_quality = 95
+frame = -1
+directory = "out_data/"+time.strftime("%Y%m%d-%H%M%S")
 
 def main():
     
@@ -91,8 +101,13 @@ def main():
 def handle_cmd(cmd):
 
     global output_view
+    global overlay_pc
     global colorize
     global multiple_faces
+    global x_pos
+    global x_size
+    global y_pos
+    global y_size
 
     print "Got Command: " + cmd
 
@@ -104,6 +119,10 @@ def handle_cmd(cmd):
         output_view = int(cmd[2])
         print "Output view is now: " + str(output_view)
 
+    elif (cmd[1] == '%'):
+        overlay_pc = int(cmd[2:])
+        print "Overlay %% is now: " + str(overlay_pc)
+
     elif (cmd[1] == 'C'):
         colorize = int(cmd[2])
         print "Colorize flir is now: " + str(colorize)
@@ -111,6 +130,22 @@ def handle_cmd(cmd):
     elif (cmd[1] == 'M'):
         multiple_faces = int(cmd[2])
         print "Multiple faces is now: " + str(multiple_faces)
+
+    elif (cmd[1] == 'X'):
+        x_pos = int(cmd[2:])
+        print "XPos is now: " + str(x_pos)
+
+    elif (cmd[1] == 'x'):
+        x_size = int(cmd[2:])
+        print "XSize is now: " + str(x_size)
+
+    elif (cmd[1] == 'Y'):
+        y_pos = int(cmd[2:])
+        print "YPos is now: " + str(y_pos)
+
+    elif (cmd[1] == 'y'):
+        y_size = int(cmd[2:])
+        print "YSize is now: " + str(y_size)
 
 
 def uds_bind(path):
@@ -144,9 +179,25 @@ def do_processing(image1, image2):
 
     combined_img = np.zeros((image1.shape[0],image1.shape[1],4), np.uint8)
 
-    # cv2.mixChannels( [image1, image2], [combined_img], [0,0, 1,1, 2,2, 3,3] )
+    image2 = cv2.resize(image2, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
+
+    x5 = max(0, x_pos);
+    y5 = max(0, y_pos);
+    x6 = min(320, x_pos+x_size);
+    y6 = min(240, y_pos+y_size);
+
+    # need to do cropping
+
+    # if (x_pos+x_size > 320):
+    #     this_x_size = this_x_size - (((x_pos+x_size)-320))
+    #     image2 = image2[:,0:this_x_size]
+
+    # if (y_pos+y_size > 240):
+    #     this_y_size = ((y_pos+y_size)-240)
+    #     image2 = image2[0:this_y_size,:]
+
     combined_img[:,:,0:3] = image1
-    combined_img[0:60,0:80,3] = image2
+    combined_img[y5:y6,x5:x6,3] = image2
 
     detections = ft.face_cascade(cascade, combined_img, False)
 
@@ -155,13 +206,12 @@ def do_processing(image1, image2):
 
     return (combined_img, detections)
 
-jpg_quality = 95
-frame = -1
-directory = "out_data/"+time.strftime("%Y%m%d-%H%M%S")
+
 def do_output(image, detections):
 
     global jpg_quality
     global frame
+    global output_view
 
     result_image = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
 
@@ -199,7 +249,7 @@ def do_output(image, detections):
         # No Video, leave result image as all black
         pass
     else:
-        result_image = cv2.addWeighted(rgb_component, 0.3, ir_component, 0.7,  0)
+        result_image = cv2.addWeighted(rgb_component, ((100-overlay_pc)/100.0), ir_component, (overlay_pc/100.0),  0)
 
     if (output_view != 0):
         ft.detections_draw(result_image, detections)

@@ -54,7 +54,7 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 		PICAM_PID=$!
 		cd ..
 
-		sleep 1
+		sleep 2
 		if kill -0 "$PICAM_PID" >/dev/null 2>&1 ; then
 			echo "Pi Camera Started OK"
 

@@ -25,8 +25,41 @@ $( document ).ready(function() {
       ws.send("!V"+this.value);
     });
 
+    $('#Overlay').on('change', function() {
+      sendInt("%", this.value);
+    });
+
+    $('#MultiFD').on('change', function() {
+      ws.send("!M" + ((this.checked == true) ? 1 : 0));
+    });
+
+    $('#Colorize').on('change', function() {
+      ws.send("!C" + ((this.checked == true) ? 1 : 0));
+    });
+
+    $('#OverXPos').on('change', function() {
+      sendInt("X", this.value)
+    });
+
+    $('#OverXSize').on('change', function() {
+      sendInt("x", this.value)
+    });
+
+    $('#OverYPos').on('change', function() {
+      sendInt("Y", this.value)
+    });
+
+    $('#OverYSize').on('change', function() {
+      sendInt("y", this.value)
+    });
+
 });
 
+function sendInt(cmd, value) {
+    if (value.length && parseInt(value) != NaN) {
+      ws.send("!"+cmd+value);
+    }
+}
 
 function drawJPG (data) {
 
@@ -94,14 +127,11 @@ if ("WebSocket" in window)
 
               delta = (frame_rate_end - frame_rate_start);
               fps = 10 / (delta/1000.0);
-              $("#message").val("FPS: " + fps);
+              $("#FPS").val(fps);
 
             }
 
             frame_rate_count = (frame_rate_count + 1) % 10;
-
-
-
 
       }
 
@@ -130,8 +160,36 @@ function HandleCommands (cmd) {
       $('#ViewSelect').val(cmd[2]);
       break;
 
-    default:
+    case '%':
+      $('#Overlay').val(cmd.substring(2));
+      break;
 
+    case 'M':
+      $("#MultiFD").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
+    case 'C':
+      // $('.myCheckbox').is(':checked');
+      $("#Colorize").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
+    case 'X':
+      $('#OverXPos').val(cmd.substring(2));
+      break;
+
+    case 'x':
+      $('#OverXSize').val(cmd.substring(2));
+      break;
+
+    case 'Y':
+      $('#OverYSize').val(cmd.substring(2));
+      break;
+
+    case 'y':
+      $('#OverYSize').val(cmd.substring(2));
+      break;
+
+    default:
       break;
 
   }

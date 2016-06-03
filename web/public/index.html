@@ -35,19 +35,22 @@
     
         				<label for="ViewSelect">View: </label>
         				<select id="ViewSelect" >
-        					<option value="4">Data Overlay</option>
         					<option value="3">Combined View</option>
         					<option value="2">Raw Visible</option>
         					<option value="1">Raw Infrared</option>
         					<option value="0">Disabled</option>
         				</select>
                         <div class="Left">
-                            <label for="FPSCap">FPS: </label>
+                            <label for="FPS">FPS: </label>
                             <input id="FPS" type="number" readonly="readonly">
                         </div>
                         <div class="Right">
+                        <!--
                             <label for="FPSCap">FPS Cap: </label>
-                            <input id="FPSCap" type="number" min="1" max="10" value="10">
+                            <input id="FPSCap" type="number" min="1" max="10" value="10" disabled>
+                        -->
+                            <label for="Overlay">Overlay %: </label>
+                            <input id="Overlay" type="number" min="0" max="100" value="30">
                         </div>
                     </fieldset>
                 </div>
@@ -68,20 +71,28 @@
                             <input id="OverYPos" type="number" min="0" max="640" value="0">
                         
                             <label for="OverYSize">Y Size: </label>
-                            <input id="OverYSize" type="number" min="0" max="640" value="80">
+                            <input id="OverYSize" type="number" min="0" max="640" value="60">
                         </div>
                     </fieldset> 
                 </div>
 
-                <div id="FDControls">
+                <div id="Controls">
                     <fieldset>
-                        <legend>Face Detection Controls</legend>
+                        <legend>Misc Controls</legend>
                         <div class="Left" style="width:70%">
                             <label for="MultiFD">Multi-Face Detection: </label>
                         </div>
                         
                         <div class="Right" style="width:30%">
                             <input type="checkbox" id="MultiFD" checked> 
+                        </div>
+
+                        <div class="Left" style="width:70%">
+                            <label for="Colorize">Colorize FLIR: </label>
+                        </div>
+                        
+                        <div class="Right" style="width:30%">
+                            <input type="checkbox" id="Colorize" checked> 
                         </div>
                     </fieldset>
                 </div>
