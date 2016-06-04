@@ -44,6 +44,8 @@ var wss = new WebSocketServer({ port: 8081 });
 // System state variables for new connections
 var last_view_cmd = "";
 var last_overlay_cmd = "";
+var last_flipx_cmd = "";
+var last_flipy_cmd = "";
 var last_face_cmd = "";
 var last_color_cmd = "";
 var last_save_cmd = "";
@@ -67,6 +69,8 @@ wss.on('connection', function connection(ws) {
   // Push out system state to new connections
   ws.send(last_view_cmd);
   ws.send(last_overlay_cmd);
+  ws.send(last_flipx_cmd);
+  ws.send(last_flipy_cmd);
   ws.send(last_face_cmd);
   ws.send(last_color_cmd);
   ws.send(last_save_cmd);
@@ -96,6 +100,14 @@ function HandleCommands (cmd) {
 
     case '%':
       last_overlay_cmd = cmd;
+      break;
+
+    case 'O':
+      last_flipx_cmd = cmd;
+      break;
+
+    case 'U':
+      last_flipy_cmd = cmd;
       break;
 
     case 'M':

@@ -23,10 +23,13 @@ socket_buf_size = 1*1024*1024
 
 # GLOBAL CONFIGURABLES
 save_file_enable = 0
-multiple_faces = 0
+multiple_faces = 1
 colorize = 1
 output_view = 3
 overlay_pc = 30
+
+flipx = 0
+flipy = 0
 
 x_pos  = 0
 x_size = 80
@@ -102,6 +105,8 @@ def handle_cmd(cmd):
 
     global output_view
     global overlay_pc
+    global flipx
+    global flipy
     global colorize
     global multiple_faces
     global save_file_enable
@@ -123,6 +128,14 @@ def handle_cmd(cmd):
     elif (cmd[1] == '%'):
         overlay_pc = int(cmd[2:])
         print "Overlay %% is now: " + str(overlay_pc)
+
+    elif (cmd[1] == 'O'):
+        flipx = int(cmd[2])
+        print "Flip X is now: " + str(flipx)
+
+    elif (cmd[1] == 'U'):
+        flipy = int(cmd[2])
+        print "Flip Y is now: " + str(flipy)
 
     elif (cmd[1] == 'C'):
         colorize = int(cmd[2])
@@ -185,6 +198,14 @@ def do_processing(image1, image2):
     rect = cv2.boundingRect(points)
 
     combined_img = np.zeros((rect[2]-1,rect[3]-1,4), np.uint8)
+
+    if (flipx == 1 and flipy == 1):
+        image2 = cv2.flip(image2, -1)
+    elif (flipx == 1):
+        image2 = cv2.flip(image2, 1)
+    elif (flipy == 1):
+        image2 = cv2.flip(image2, 0)
+
     image2 = cv2.resize(image2, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
 
     x1 = 0 if (rect[1] >= 0) else abs(rect[1])
@@ -200,12 +221,11 @@ def do_processing(image1, image2):
 
     detections = ft.face_cascade(cascade, combined_img, True)
 
-    print detections.shape[0]
-
     if ((multiple_faces == 0) and (detections.shape[0] > 1) ):
-        # detections = detections[0,:]
-        # print detections[0]
-        pass
+
+        mask = np.zeros(len(detections), dtype=bool)
+        mask[[0]] = True
+        detections = detections[mask]
 
     return (combined_img, detections)
 

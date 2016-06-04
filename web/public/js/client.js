@@ -29,6 +29,14 @@ $( document ).ready(function() {
       sendInt("%", this.value);
     });
 
+    $('#FlipX').on('change', function() {
+      ws.send("!O" + ((this.checked == true) ? 1 : 0));
+    });
+
+    $('#FlipY').on('change', function() {
+      ws.send("!U" + ((this.checked == true) ? 1 : 0));
+    });
+
     $('#MultiFD').on('change', function() {
       ws.send("!M" + ((this.checked == true) ? 1 : 0));
     });
@@ -168,6 +176,15 @@ function HandleCommands (cmd) {
       $('#Overlay').val(cmd.substring(2));
       break;
 
+    case 'O':
+      $("#FlipX").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
+    case 'U':
+      // $('.myCheckbox').is(':checked');
+      $("#FlipY").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
     case 'M':
       $("#MultiFD").prop('checked', ((cmd[2] == 1) ?  true : false));
       break;
@@ -180,7 +197,6 @@ function HandleCommands (cmd) {
     case 'S':
       $("#Save").prop('checked', ((cmd[2] == 1) ?  true : false));
       break;
-
 
     case 'X':
       $('#OverXPos').val(cmd.substring(2));
