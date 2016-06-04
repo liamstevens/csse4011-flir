@@ -80,7 +80,7 @@ int main(int argc, char **argv)
 		//save_numpy_file();
 
 		sent = sendto(fd, image_data, sizeof(uint8_t) * 60 * 80, 0, NULL, 0);
-		// printf("Sent: %d\n", sent);
+		 printf("Sent: %d\n", sent);
     	
 	}
 }
@@ -159,7 +159,7 @@ int transfer(int fd)
 		{
 			for(i=0;i<80;i++)
 			{
-				image_data[frame_number][i] = lepton_frame_packet[2*i+4]; //(lepton_frame_packet[2*i+4] << 8 | lepton_frame_packet[2*i+5]);
+				image_data[frame_number][i] = lepton_frame_packet[2*i+5]; //(lepton_frame_packet[2*i+4] << 8 | lepton_frame_packet[2*i+5]);
 			}
 		}
 	}
