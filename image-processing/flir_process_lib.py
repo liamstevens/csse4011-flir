@@ -28,6 +28,16 @@ def series_analyse(im_list, area_list):
         out.append(val)
     return out
 
+''' ^^^ 
+    if (len(im_list) == len(area_list)):
+        for i in range(len(im_list)):
+            a = area_list[i]
+            e = im_list[i]
+            etc ..
+    else:
+        print "wrong size array"
+'''
+
 '''
     Find the dominant frequency, typically this translates to the heartbeat.
     There is likely a lot of low frequency response, which needs to be ignored.

@@ -55,8 +55,10 @@ var last_ypos_cmd = "";
 var last_ysize_cmd = "";
 
 
+// On connection event
 wss.on('connection', function connection(ws) {
 
+  // Assign a function to handle messages received from clients
   ws.on('message', function incoming(message) {
     console.log('received: %s', message);
 
@@ -81,6 +83,7 @@ wss.on('connection', function connection(ws) {
 
 });
 
+// For each connected client, broadcast a message
 wss.broadcast = function broadcast(data) {
   wss.clients.forEach(function each(client) {
     client.send(data);

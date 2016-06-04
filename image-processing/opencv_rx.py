@@ -35,6 +35,7 @@ jpg_quality = 95
 mkdir = 0
 directory = "out_data/"+time.strftime("%Y%m%d-%H%M%S")
 
+# Main operation loop
 def main():
     
     picam_ready = 0
@@ -47,6 +48,7 @@ def main():
 
     try:
 
+        # Create or connect to all required UDS endpoints
         node_tx = uds_connect("/run/shm/cv2node")
 
         node_rx = uds_bind("/run/shm/node2cv")
@@ -55,10 +57,13 @@ def main():
 
         flir_rx = uds_bind("/run/shm/flir2cv")
 
+        # Main function loop
         while True:
 
+            # Wait for one of the UDS sockets to become ready (blocking)
             events = epoll.poll()
 
+            # For each socket that is ready, read in data and save it
             for fileno, event in events:
 
                 if (picam_rx.fileno() == fileno):
@@ -73,20 +78,34 @@ def main():
                     cmd = node_rx.recv(socket_buf_size)
                     handle_cmd(cmd)
 
+            # Once we have both a picam and a flir image, move on, else wait a bit longer
             if (picam_ready != 1 or flir_ready != 1):
                 continue
 
+            # Decode the picam image (jpg)
             nparr = np.fromstring(jpg, np.uint8)
             pi_cam_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
+            # Decode the flir image (techically a raw 60x80 uint8_t data buffer)
             nparr = np.fromstring(pgm, np.uint8)
             flir_img = np.reshape(nparr, (60, 80))
 
+            # Process them and combine them
             combined_img, detections = do_processing(pi_cam_img, flir_img)
+
+            # Measure heartbeats
+            msg = do_measurement(combined_img, detections)
+
+            # Generate the output
             out_img = do_output(combined_img, detections)
 
+            # Send a text message to the web browser, (\x40\x11 as magic number)
+            node_tx.send("\x40\x11" +  msg)
+
+            # Send the output image to the web browser
             node_tx.send(out_img)
 
+            # Reset for next round
             picam_ready = 0
             flir_ready = 0
 
@@ -96,6 +115,7 @@ def main():
     finally:
         print "Exiting"
 
+# Handle commands and save results in global variables
 def handle_cmd(cmd):
 
     global output_view
@@ -160,6 +180,8 @@ def handle_cmd(cmd):
         y_size = int(cmd[2:])
         print "YSize is now: " + str(y_size)
 
+
+# Helper function to create a UDS endpoint -- Also adds to epoll
 def uds_bind(path):
 
     global epoll
@@ -175,6 +197,8 @@ def uds_bind(path):
 
     return sock
 
+
+# Helper function to connect to a UDS endpoint
 def uds_connect(path):
 
     global socket_buf_size
@@ -185,44 +209,63 @@ def uds_connect(path):
     return sock
 
 
+# Given the two images, JPG in 1, FLIR in 2, combine them as best we can
 def do_processing(image1, image2):
 
-    # TODO: Crop image1 to smaller size to match 
+    # Calculate the bounding box required to hold both image1 and two, regardless of their size or offset
     points = np.array([[0,0], [image1.shape[0],image1.shape[1]], [y_pos,x_pos], [y_pos+y_size, x_pos+x_size]])
     rect = cv2.boundingRect(points)
 
+    # Create an image to house the two images, based on the dimensions calculated above
     combined_img = np.zeros((rect[2]-1,rect[3]-1,4), np.uint8)
 
-    if (flipx == 1 and flipy == 1):
-        image2 = cv2.flip(image2, -1)
-    elif (flipx == 1):
-        image2 = cv2.flip(image2, 1)
-    elif (flipy == 1):
-        image2 = cv2.flip(image2, 0)
+    # Resize and flip flir image as required
+    image2 = resize_flir_image(image2)
 
-    image2 = cv2.resize(image2, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
-
+    # Figure out absolute positioning of image1 (x1,y1) and image2 (x2,y2) based on bounding box
     x1 = 0 if (rect[1] >= 0) else abs(rect[1])
     y1 = 0 if (rect[0] >= 0) else abs(rect[0])
     x2 = 0 if (x_pos < 0) else x_pos
     y2 = 0 if (y_pos < 0) else y_pos
 
+    # Copy jpg data into combined image, channels 0-2.. or does it just make a view?
     combined_img[y1:y1+image1.shape[0],x1:x1+image1.shape[1],0:3] = image1
 
+    # Copy flir data into channel 3
     combined_img[y2:y2+y_size,x2:x2+x_size,3] = image2
 
-    combined_img = cv2.resize(combined_img, (320, 240), interpolation = cv2.INTER_CUBIC)
-
+    # Run facial detection on the image, seems to only work on channels 0-2, doesnt try on flir data
     detections = ft.face_cascade(cascade, combined_img, True)
 
+    # Strip all but the first detection if only 1 is requested
     if ((multiple_faces == 0) and (len(detections) > 1)):
-
         mask = np.zeros(len(detections), dtype=bool)
         mask[[0]] = True
         detections = detections[mask]
 
     return (combined_img, detections)
 
+
+# Resize and flip the flir image
+def resize_flir_image(image):
+    
+    if (flipx == 1 and flipy == 1):
+        image = cv2.flip(image, -1)
+    elif (flipx == 1):
+        image = cv2.flip(image, 1)
+    elif (flipy == 1):
+        image = cv2.flip(image, 0)
+
+    return cv2.resize(image, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
+
+
+# Empty function, will be used for heartbeat measurement
+def do_measurement(image, detections):
+
+    if (len(detections) == 0):
+        return "No heartbeats detected"
+    else:
+        return "Gathering heartbeats"
 
 def do_output(image, detections):
 
@@ -231,69 +274,70 @@ def do_output(image, detections):
     global output_view
     global save_file_enable
 
-    result_image = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
-
+    # Pre-allocate required storage space for images 
+    #   -- Note, all the same size, and IR component is 3 channels for RGB colorization
+    result_image  = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
     rgb_component = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
-    ir_component = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
+    ir_component  = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
 
+    # Split RGB Channels into rgb_component, and split IR into 3x ir_component channels
     cv2.mixChannels( [image], [rgb_component, ir_component], [0,0, 1,1, 2,2, 3,3, 3,4, 3,5] )
 
-    timestamp = int(round((time.time()-epoch)*1000))
-
+    # If saving requested...
     if (save_file_enable == 1):
 
-        print "SAVING "
+        # Get the millisecond timestamp for this frame
+        timestamp = int(round((time.time()-epoch)*1000))
 
+        # If output directories haven't yet been made, do it now
         if (mkdir == 0):
-            print "MKDIR"
             os.makedirs(directory+"/cam/")
             os.makedirs(directory+"/flir/")
             mkdir = 1
 
-        # Write image1 to file
+        # Write RGB to file
         cv2.imwrite(directory+"/cam/"+str(timestamp)+".jpg", rgb_component)
-        # Write image2 to file
-        cv2.imwrite(directory+"/flir/"+str(timestamp)+".pgm", ir_component)
+        # Write IR to file, jpg for file size?
+        cv2.imwrite(directory+"/flir/"+str(timestamp)+".jpg", ir_component)
 
-
+    # If colorizing requested
     if (colorize == 1):
-        ir_component = cv2.LUT(ir_component, LUT)
+        ir_component = cv2.LUT(ir_component, LUT)   # For each pixel, replace with value from LUT
 
-    # Do transformation on incoming image
+    # Based on user preference, set result_image
     if (output_view == 2):
         result_image = rgb_component
-
     elif (output_view == 1):
         result_image = ir_component
-
     elif (output_view == 0):
         # No Video, leave result image as all black
         pass
     else:
+        # If combined, addWeighted as user preference
         result_image = cv2.addWeighted(rgb_component, ((100-overlay_pc)/100.0), ir_component, (overlay_pc/100.0),  0)
 
+    # If no output view, don't bother drawing the detections
     if (output_view != 0):
         ft.detections_draw(result_image, detections)
 
+    # Browser expects the image to be 320x240, so scale it down now
+    result_image = cv2.resize(result_image, (320, 240), interpolation = cv2.INTER_CUBIC)
     out_img = cv2.imencode('.jpeg', result_image,  [int(cv2.IMWRITE_JPEG_QUALITY), jpg_quality])[1].tostring()
 
+    # Node UDS implementation can only acces up to 64kB, so try and compress Jpg to sit around 58kB
     if (len(out_img) > 58000):
         if (jpg_quality > 0):
             jpg_quality = jpg_quality - 1
     else:
-        if (jpg_quality < 95):
+        if (jpg_quality < 98):
             jpg_quality = jpg_quality + 1
 
     return out_img
 
+# Brane's Heatmap, converted into an np.array, and reshaped to the correct format for the LUT function
 LUT = [0,0,0,16,0,0,33,0,0,42,0,0,49,0,0,56,0,0,63,0,0,70,0,0,77,0,0,83,0,0,87,0,1,91,0,2,95,0,3,99,0,4,103,0,5,106,0,7,110,0,9,115,0,11,116,0,12,118,0,13,120,0,16,122,0,19,124,0,22,127,0,25,129,0,28,131,0,31,133,0,34,135,0,38,137,0,42,138,0,45,140,0,48,141,0,52,143,0,55,144,0,58,146,0,61,147,0,63,148,0,65,149,0,68,149,0,71,150,0,74,150,0,76,151,0,79,151,0,82,152,0,85,152,0,88,153,0,92,154,0,94,155,0,97,155,0,101,155,0,104,155,0,107,156,0,110,156,0,112,156,0,114,157,0,117,157,0,121,157,0,124,157,0,126,157,0,129,157,0,132,157,0,135,157,0,137,156,0,140,156,0,143,155,0,146,155,0,149,155,0,152,155,0,154,155,0,157,155,0,159,155,0,161,154,0,164,154,0,166,153,0,168,153,0,170,152,0,172,152,0,174,151,1,175,151,1,177,150,1,178,149,1,180,149,2,182,149,3,183,148,4,185,147,4,186,147,5,188,146,5,189,146,5,190,145,6,191,144,7,192,143,9,193,142,10,194,141,11,195,139,12,197,138,13,198,136,15,200,134,17,201,133,18,202,131,20,203,129,21,204,126,23,206,123,24,207,121,26,208,118,27,208,116,28,209,113,30,210,111,32,211,108,34,212,104,36,213,101,38,214,98,40,216,95,42,217,91,44,218,87,46,219,81,47,220,76,49,221,70,51,222,65,53,223,59,54,223,54,56,224,48,57,224,42,59,225,37,61,226,31,63,227,28,65,228,25,67,228,23,69,229,21,71,230,19,72,231,17,74,231,15,76,232,13,77,233,11,78,234,10,80,234,9,82,235,8,84,235,8,86,236,7,87,236,7,89,236,6,91,237,5,92,237,4,94,238,4,95,238,3,97,239,3,99,239,3,100,240,3,102,240,2,103,241,2,104,241,1,106,241,1,107,241,1,109,242,1,111,242,1,113,243,0,114,243,0,115,243,0,117,244,0,119,244,0,121,244,0,124,244,0,126,245,0,128,245,0,129,246,0,131,246,0,133,247,0,134,247,0,136,248,0,137,248,0,139,248,0,140,248,0,142,249,0,143,249,0,144,249,0,146,249,0,148,249,0,150,250,0,153,250,0,155,251,0,157,251,0,159,252,0,161,252,0,163,253,0,166,253,0,168,253,0,170,253,0,172,253,0,174,253,0,176,254,0,177,254,0,178,254,0,181,254,0,183,254,0,185,254,0,186,254,0,188,254,0,190,254,0,191,254,0,193,254,0,195,254,0,197,254,0,199,254,0,200,254,1,202,254,1,203,254,2,205,254,3,206,254,4,207,254,6,209,254,8,211,254,10,213,254,11,215,254,12,216,254,14,218,254,16,219,255,20,220,255,24,221,255,28,222,255,32,224,255,36,225,255,39,227,255,44,228,255,50,229,255,56,230,255,62,231,255,67,233,255,73,234,255,79,236,255,85,237,255,92,238,255,98,238,255,105,239,255,111,240,255,119,241,255,127,241,255,135,242,255,142,243,255,149,244,255,156,244,255,164,245,255,171,245,255,178,246,255,184,247,255,190,247,255,195,248,255,201,248,255,206,249,255,212,250,255,218,251,255,224,252,255,229,253,255,235,253,255,240,254,255,244,254,255,249,255,255,252,255,255,255,255,255]
 LUT = np.array(LUT, np.uint8)
 LUT = np.reshape(LUT, (256, 1, 3))
 
 if __name__ == "__main__":
-
     sys.exit(main())
-
-
-# Increase Buffer sizes?
-# https://www.raspberrypi.org/forums/viewtopic.php?f=81&t=106052

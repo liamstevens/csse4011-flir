@@ -92,7 +92,12 @@ select {
   margin: .5em;
   font:80%/1 sans-serif;
   border:1px solid;
-  }
+}
+
+#OverlayControls input {
+	margin-bottom: 10px;
+
+}
 
 #Display {
 	margin-left:250px;
