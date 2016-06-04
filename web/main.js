@@ -46,6 +46,7 @@ var last_view_cmd = "";
 var last_overlay_cmd = "";
 var last_face_cmd = "";
 var last_color_cmd = "";
+var last_save_cmd = "";
 var last_xpos_cmd = "";
 var last_xsize_cmd = "";
 var last_ypos_cmd = "";
@@ -68,6 +69,7 @@ wss.on('connection', function connection(ws) {
   ws.send(last_overlay_cmd);
   ws.send(last_face_cmd);
   ws.send(last_color_cmd);
+  ws.send(last_save_cmd);
   ws.send(last_xpos_cmd);
   ws.send(last_xsize_cmd);
   ws.send(last_ypos_cmd);
@@ -104,6 +106,10 @@ function HandleCommands (cmd) {
       last_color_cmd = cmd;
       break;
 
+    case 'S':
+      last_save_cmd = cmd;
+      break;  
+
     case 'X':
       last_xpos_cmd = cmd;
       break;
@@ -122,7 +128,7 @@ function HandleCommands (cmd) {
 
     default:
       console.log(`Got unknown cmd`);
-      break;
+      return;
   }
 
   // Send command to all other clients

@@ -37,6 +37,10 @@ $( document ).ready(function() {
       ws.send("!C" + ((this.checked == true) ? 1 : 0));
     });
 
+    $('#Save').on('change', function() {
+      ws.send("!S" + ((this.checked == true) ? 1 : 0));
+    });
+
     $('#OverXPos').on('change', function() {
       sendInt("X", this.value)
     });
@@ -173,6 +177,11 @@ function HandleCommands (cmd) {
       $("#Colorize").prop('checked', ((cmd[2] == 1) ?  true : false));
       break;
 
+    case 'S':
+      $("#Save").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
+
     case 'X':
       $('#OverXPos').val(cmd.substring(2));
       break;
@@ -182,7 +191,7 @@ function HandleCommands (cmd) {
       break;
 
     case 'Y':
-      $('#OverYSize').val(cmd.substring(2));
+      $('#OverYPos').val(cmd.substring(2));
       break;
 
     case 'y':
