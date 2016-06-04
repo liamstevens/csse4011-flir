@@ -29,12 +29,24 @@ $( document ).ready(function() {
       sendInt("%", this.value);
     });
 
+    $('#FlipX').on('change', function() {
+      ws.send("!O" + ((this.checked == true) ? 1 : 0));
+    });
+
+    $('#FlipY').on('change', function() {
+      ws.send("!U" + ((this.checked == true) ? 1 : 0));
+    });
+
     $('#MultiFD').on('change', function() {
       ws.send("!M" + ((this.checked == true) ? 1 : 0));
     });
 
     $('#Colorize').on('change', function() {
       ws.send("!C" + ((this.checked == true) ? 1 : 0));
+    });
+
+    $('#Save').on('change', function() {
+      ws.send("!S" + ((this.checked == true) ? 1 : 0));
     });
 
     $('#OverXPos').on('change', function() {
@@ -164,6 +176,15 @@ function HandleCommands (cmd) {
       $('#Overlay').val(cmd.substring(2));
       break;
 
+    case 'O':
+      $("#FlipX").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
+    case 'U':
+      // $('.myCheckbox').is(':checked');
+      $("#FlipY").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
     case 'M':
       $("#MultiFD").prop('checked', ((cmd[2] == 1) ?  true : false));
       break;
@@ -171,6 +192,10 @@ function HandleCommands (cmd) {
     case 'C':
       // $('.myCheckbox').is(':checked');
       $("#Colorize").prop('checked', ((cmd[2] == 1) ?  true : false));
+      break;
+
+    case 'S':
+      $("#Save").prop('checked', ((cmd[2] == 1) ?  true : false));
       break;
 
     case 'X':
@@ -182,7 +207,7 @@ function HandleCommands (cmd) {
       break;
 
     case 'Y':
-      $('#OverYSize').val(cmd.substring(2));
+      $('#OverYPos').val(cmd.substring(2));
       break;
 
     case 'y':

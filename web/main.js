@@ -44,8 +44,11 @@ var wss = new WebSocketServer({ port: 8081 });
 // System state variables for new connections
 var last_view_cmd = "";
 var last_overlay_cmd = "";
+var last_flipx_cmd = "";
+var last_flipy_cmd = "";
 var last_face_cmd = "";
 var last_color_cmd = "";
+var last_save_cmd = "";
 var last_xpos_cmd = "";
 var last_xsize_cmd = "";
 var last_ypos_cmd = "";
@@ -66,8 +69,11 @@ wss.on('connection', function connection(ws) {
   // Push out system state to new connections
   ws.send(last_view_cmd);
   ws.send(last_overlay_cmd);
+  ws.send(last_flipx_cmd);
+  ws.send(last_flipy_cmd);
   ws.send(last_face_cmd);
   ws.send(last_color_cmd);
+  ws.send(last_save_cmd);
   ws.send(last_xpos_cmd);
   ws.send(last_xsize_cmd);
   ws.send(last_ypos_cmd);
@@ -96,6 +102,14 @@ function HandleCommands (cmd) {
       last_overlay_cmd = cmd;
       break;
 
+    case 'O':
+      last_flipx_cmd = cmd;
+      break;
+
+    case 'U':
+      last_flipy_cmd = cmd;
+      break;
+
     case 'M':
       last_face_cmd = cmd;
       break;
@@ -103,6 +117,10 @@ function HandleCommands (cmd) {
     case 'C':
       last_color_cmd = cmd;
       break;
+
+    case 'S':
+      last_save_cmd = cmd;
+      break;  
 
     case 'X':
       last_xpos_cmd = cmd;
@@ -122,7 +140,7 @@ function HandleCommands (cmd) {
 
     default:
       console.log(`Got unknown cmd`);
-      break;
+      return;
   }
 
   // Send command to all other clients
