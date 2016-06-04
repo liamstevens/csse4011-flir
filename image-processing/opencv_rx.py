@@ -215,7 +215,7 @@ def do_processing(image1, image2):
 
     detections = ft.face_cascade(cascade, combined_img, True)
 
-    if ((multiple_faces == 0) and (detections.shape[0] > 1) ):
+    if ((multiple_faces == 0) and (len(detections) > 1)):
 
         mask = np.zeros(len(detections), dtype=bool)
         mask[[0]] = True
