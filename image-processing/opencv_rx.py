@@ -12,6 +12,7 @@ import face_test as ft
 
 epoll = select.epoll()
 cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
+epoch = time.time()
 
 socket_buf_size = 1*1024*1024
 
@@ -31,7 +32,7 @@ y_pos  = 0
 y_size = 60
 
 jpg_quality = 95
-frame = -1
+mkdir = 0
 directory = "out_data/"+time.strftime("%Y%m%d-%H%M%S")
 
 def main():
@@ -159,7 +160,6 @@ def handle_cmd(cmd):
         y_size = int(cmd[2:])
         print "YSize is now: " + str(y_size)
 
-
 def uds_bind(path):
 
     global epoll
@@ -227,8 +227,9 @@ def do_processing(image1, image2):
 def do_output(image, detections):
 
     global jpg_quality
-    global frame
+    global mkdir
     global output_view
+    global save_file_enable
 
     result_image = np.zeros((image.shape[0],image.shape[1],3), np.uint8)
 
@@ -237,18 +238,22 @@ def do_output(image, detections):
 
     cv2.mixChannels( [image], [rgb_component, ir_component], [0,0, 1,1, 2,2, 3,3, 3,4, 3,5] )
 
-    frame = frame + 1
+    timestamp = int(round((time.time()-epoch)*1000))
 
     if (save_file_enable == 1):
 
-        if (frame == 0):
+        print "SAVING "
+
+        if (mkdir == 0):
+            print "MKDIR"
             os.makedirs(directory+"/cam/")
             os.makedirs(directory+"/flir/")
+            mkdir = 1
 
         # Write image1 to file
-        cv2.imwrite(directory+"/cam/"+str(frame)+".jpg", rgb_component)
+        cv2.imwrite(directory+"/cam/"+str(timestamp)+".jpg", rgb_component)
         # Write image2 to file
-        cv2.imwrite(directory+"/flir/"+str(frame)+".pgm", ir_component)
+        cv2.imwrite(directory+"/flir/"+str(timestamp)+".pgm", ir_component)
 
 
     if (colorize == 1):
