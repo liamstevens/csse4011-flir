@@ -10,12 +10,6 @@ import numpy as np
 
 import face_test as ft
 
-from PIL import Image
-
-# 
-# pi_cam_img = np.zeros((480,640,3), np.uint8)
-# flir_img = np.zeros((60,80,1), np.uint8)
-
 epoll = select.epoll()
 cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
