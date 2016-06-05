@@ -61,7 +61,7 @@ class target:
         #analysis, so we are going to discard anything that is close to, or below 
         #40BPM (0.6666Hz), as this is pushing it for resting heart rate.
         #####################ARBITRARY SPEEL OVER.#########################
-        pos_freq =  [f in frequencies if f > 0]
+        pos_freq =  [f for f in frequencies if f > 0]
         #This uses a bit of trickery from the way that np.fft.fftfreq constructs its
         #array of frequencies. All positive frequencies are added to the array, then the
         #negative frequencies. This means we can avoid having to process the negative
@@ -69,8 +69,8 @@ class target:
 
         spectrum = spectrum[:]#truncate the spectrum appropriately
         #Now we truncate for the lower frequencies at 0.666Hz
-        final_freq = [f in pos_freq if f > 0.666]
-        spectrum = spectrum[(len(pos_freq)-len(final_freq):len(pos_freq)-1]
+        final_freq = [f for f in pos_freq if f > 0.666]
+        spectrum = spectrum[len(pos_freq)-len(final_freq):len(pos_freq)-1]
         abs_spec = np.absolute(spectrum)
         max_val = np.amax(abs_spec)
         max_index = np.where(abs_spec==max_val)[0][0]

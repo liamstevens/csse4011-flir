@@ -8,7 +8,8 @@ import calendar, time
 import cv2
 import numpy as np
 
-import face_test as ft
+import flir_process_lib as fpl
+import target_lib as tl
 
 epoll = select.epoll()
 cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
@@ -91,7 +92,7 @@ def main():
             flir_img = np.reshape(nparr, (60, 80))
 
             # Process them and combine them
-            combined_img, detections = do_processing(pi_cam_img, flir_img)
+            combined_img, detections = do_preprocessing(pi_cam_img, flir_img)
 
             # Measure heartbeats
             msg = do_measurement(combined_img, detections)
@@ -108,6 +109,8 @@ def main():
             # Reset for next round
             picam_ready = 0
             flir_ready = 0
+
+            cv2.waitKey(1)
 
     except Exception as e:
         print "Exception: " + str(e)
@@ -210,7 +213,7 @@ def uds_connect(path):
 
 
 # Given the two images, JPG in 1, FLIR in 2, combine them as best we can
-def do_processing(image1, image2):
+def do_preprocessing(image1, image2):
 
     # Calculate the bounding box required to hold both image1 and two, regardless of their size or offset
     points = np.array([[0,0], [image1.shape[0],image1.shape[1]], [y_pos,x_pos], [y_pos+y_size, x_pos+x_size]])
@@ -235,7 +238,9 @@ def do_processing(image1, image2):
     combined_img[y2:y2+y_size,x2:x2+x_size,3] = image2
 
     # Run facial detection on the image, seems to only work on channels 0-2, doesnt try on flir data
-    detections = ft.face_cascade(cascade, combined_img, True)
+    detections = fpl.face_cascade(cascade, combined_img, False)
+
+    # TODO: Consider sorting detections or something?
 
     # Strip all but the first detection if only 1 is requested
     if ((multiple_faces == 0) and (len(detections) > 1)):
@@ -261,6 +266,15 @@ def resize_flir_image(image):
 
 # Empty function, will be used for heartbeat measurement
 def do_measurement(image, detections):
+
+    for idx, d in enumerate(detections):
+        neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
+        
+        if (len(neck_img) == 0):
+            print "NONE"
+            continue
+
+        print fpl.mean_luminance(neck_img)
 
     if (len(detections) == 0):
         return "No heartbeats detected"
@@ -318,7 +332,7 @@ def do_output(image, detections):
 
     # If no output view, don't bother drawing the detections
     if (output_view != 0):
-        ft.detections_draw(result_image, detections)
+        fpl.detections_draw(result_image, detections)
 
     # Browser expects the image to be 320x240, so scale it down now
     result_image = cv2.resize(result_image, (320, 240), interpolation = cv2.INTER_CUBIC)

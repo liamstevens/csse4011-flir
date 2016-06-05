@@ -24,22 +24,12 @@ def threshold_contour(image, ulim, llim):
 '''
 def series_analyse(im_list, area_list):
     out = []
-    for e in im_list:
-        a = area_list[im_list.index(e)] #Pretty dodgy. Could almost certainly do this more efficiently but it will do for now.
+    for e,a in zip(im_list,area_list):
+        # a = area_list[im_list.index(e)] #Pretty dodgy. Could almost certainly do this more efficiently but it will do for now.
         mask = mask_image(e, a)
         val = mean_luminance(mask)
         out.append(val)
     return out
-
-''' ^^^ 
-    if (len(im_list) == len(area_list)):
-        for i in range(len(im_list)):
-            a = area_list[i]
-            e = im_list[i]
-            etc ..
-    else:
-        print "wrong size array"
-'''
 
 '''
     Find the dominant frequency, typically this translates to the heartbeat.
@@ -82,12 +72,12 @@ def find_frequency(arr, Ts):
     @return: The neck corresponding to the detected face.
 '''
 def find_neck(image, roi):
-    neckdim = ((roi[0]+((roi[2]-roi[0])/4)),roi[3],(roi[2]-((roi[2]-roi[0])/4)), (roi[3]+((roi[3]-roi[1])/2))
+    neckdim = ((roi[0]+((roi[2]-roi[0])/4)),roi[3],(roi[2]-((roi[2]-roi[0])/4)), (roi[3]+((roi[3]-roi[1])/2)))
     #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
     #and width, and is centred on the middle of the face's ROI. This means the "corners" of the new ROI
     #are at 1/4, 3/4x, and y, 3y/2. 
     out_img = mask_image(image, neckdim)
-    return out_img
+    return out_img, neckdim
 '''
     Arguments:
     @image: A numpy ndarray representation of an image.
@@ -95,7 +85,8 @@ def find_neck(image, roi):
     @return A masked (ie., cropped) version of the image.
 '''
 def mask_image(image, area):
-    return image[area[0]:area[2], area[1]:area[3]]
+    return image[area[1]:area[1]+area[3], area[0]:area[0]+area[2]]
+    # NOTE: SPLICING IS [Y,X,c]
 
 '''
     Arguments:
@@ -104,8 +95,14 @@ def mask_image(image, area):
     @return: The average luminance of the region.
 '''
 def mean_luminance(image):
-    image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YCR_CB) 
-    image_y = cv2.split(image_yuv)[0]
+
+    if (len(image.shape) == 3):
+        image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YCR_CB)
+        image_y = image_yuv[0]
+    else:
+        # Just take the luminence of the raw IR feed? Research shows that the gray channel == Y channel
+        image_y = image
+
     val = cv2.mean(image_y)[0]
     return val
             
@@ -136,8 +133,10 @@ def overlay(im1, im2):
 def face_cascade(cascade, image, gflag=True):
     if not gflag:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.equalizeHist(gray)
     else:
         gray = image
+
     return cascade.detectMultiScale(gray, scaleFactor = 1.5, minNeighbors = 5, minSize = (30, 30), flags = cv2.CASCADE_SCALE_IMAGE)
 
 
