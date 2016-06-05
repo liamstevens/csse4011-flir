@@ -2,6 +2,9 @@ import cv2, sys
 import numpy as np
 from scipy.signal import savgol_filter
 
+
+
+
 #Function to draw lines around objects of at least llim intensity
 def threshold_contour(image, ulim, llim):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -47,22 +50,34 @@ def find_frequency(arr, Ts):
     #analysis, so we are going to discard anything that is close to, or below 
     #40BPM (0.6666Hz), as this is pushing it for resting heart rate.
     #####################ARBITRARY SPEEL OVER.#########################
-    pos_freq =  [f in frequencies if f > 0]
+    pos_freq =  [f for f in frequencies if f > 0]
     #This uses a bit of trickery from the way that np.fft.fftfreq constructs its
     #array of frequencies. All positive frequencies are added to the array, then the
     #negative frequencies. This means we can avoid having to process the negative
     #frequencies at all, save for one.
-
-    spectrum = spectrum[:len(pos_freq)-1]#truncate the spectrum appropriately
     #Now we truncate for the lower frequencies at 0.666Hz
-    final_freq = [f in pos_freq if f > 0.666]
-    spectrum = spectrum[(len(pos_freq)-len(final_freq)-1:]
+    final_freq = [f for f in pos_freq if f > 0.7]
+    spectrum = spectrum[(len(pos_freq)-len(final_freq)):len(pos_freq)-1]
     abs_spec = np.absolute(spectrum)
     max_val = np.amax(abs_spec)
-    maxfreq = final_freq[np.where(abs_spec==max_val)]
+    max_index = np.where(abs_spec==max_val)
+    maxfreq = final_freq[max_index[0][0]]#-1?
     return int(maxfreq*60) #Return a floored (integer) representation of the frequency in BPM
 
-
+'''
+    Used once a face is found to find the neck.
+    Arguments:
+    @image: The entire image. Multiple faces is fine, as there should be only one face processed per function call.
+    @roi: The Region of Interest describing the location of the face.
+    @return: The neck corresponding to the detected face.
+'''
+def find_neck(image, roi):
+    neckdim = ((roi[0]+((roi[2]-roi[0])/4)),roi[3],(roi[2]-((roi[2]-roi[0])/4)), (roi[3]+((roi[3]-roi[1])/2))
+    #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
+    #and width, and is centred on the middle of the face's ROI. This means the "corners" of the new ROI
+    #are at 1/4, 3/4x, and y, 3y/2. 
+    out_img = mask_image(image, neckdim)
+    return out_img
 '''
     Arguments:
     @image: A numpy ndarray representation of an image.
@@ -121,7 +136,6 @@ def detections_draw(image, detections):
         cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
 
-
 #TEST MAIN LOOP FOR DEVELOPMENT
 def main():
     regions = []
@@ -135,9 +149,6 @@ def main():
     for i in range(1, 100):
         raw.append(cv2.imread(image_path.strip()+"{}.jpg".format(i)))
     #raw.append(cv2.imread(image_path))
-    '''for i in range(0, 20):
-        raw.append[cv2.imread("latest{0:3d}.jpg".format(i))]
-        '''
     #iterate over test images and get output
     for i in raw:
         #Do facial recognition on each image and return an array of images + regions of interest
@@ -149,19 +160,8 @@ def main():
     #print "No. images: {0:2d}".format(len(images))
     base = min(vals)
     vals[:] = [e - base for e in vals]
-    print "unfiltered"
-    print vals
     fft_vals = np.fft.fft(vals)
-    print "FFT coefficients"
-    print fft_vals
-    print "Frequencies?"
-    print np.fft.fftfreq(fft_vals.size, 0.125)
-    vals = savgol_filter(vals, 21, 5, deriv=1)
-    print "Derivatives"
-    print vals
-    #mpl.plot([vals])
-    #mpl.ylabel("Variance in mean luminance of images")
-    #mpl.show()
+    print "Frequency: {}".format(find_frequency(vals, 0.125))
 if __name__ == "__main__":
     sys.exit(main())
     
