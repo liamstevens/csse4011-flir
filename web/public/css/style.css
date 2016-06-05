@@ -1,11 +1,11 @@
 html, body
 {
-	min-width: 1000px;
+/*	min-width: 800px;
 	min-height: 700px;
-	overflow:hidden;
+*/	overflow:hidden;
 	
-	width: 100%;
-	height: 100%;
+	height: 100vh;
+	width: 100vw;
 
 	font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 	background-color: rgba(0, 0, 0, 0.2);
@@ -44,7 +44,8 @@ select {
 }
 
 #Content {
-
+	width: 100%;
+	height: 100%;
 }
 
 #SideBar {
@@ -99,13 +100,21 @@ select {
 
 }
 
+#message {
+	height:250px;
+}
+
 #Display {
 	margin-left:250px;
+	height:100%;
+	width:100%;
 }
 
 #myCanvas {
-	height:100vh;
-	width:calc(100vh*(4/3));
+/*	height:calc(100vw*(3/4));
+	width:calc(100vh*(4/3));*/
+	height:100%;
+	/*width: auto;*/
 }
 
 #Footer {
