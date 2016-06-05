@@ -43,9 +43,22 @@ var wss = new WebSocketServer({ port: 8081 });
 
 // System state variables for new connections
 var last_view_cmd = "";
+var last_overlay_cmd = "";
+var last_flipx_cmd = "";
+var last_flipy_cmd = "";
+var last_face_cmd = "";
+var last_color_cmd = "";
+var last_save_cmd = "";
+var last_xpos_cmd = "";
+var last_xsize_cmd = "";
+var last_ypos_cmd = "";
+var last_ysize_cmd = "";
 
+
+// On connection event
 wss.on('connection', function connection(ws) {
 
+  // Assign a function to handle messages received from clients
   ws.on('message', function incoming(message) {
     console.log('received: %s', message);
 
@@ -57,14 +70,25 @@ wss.on('connection', function connection(ws) {
 
   // Push out system state to new connections
   ws.send(last_view_cmd);
+  ws.send(last_overlay_cmd);
+  ws.send(last_flipx_cmd);
+  ws.send(last_flipy_cmd);
+  ws.send(last_face_cmd);
+  ws.send(last_color_cmd);
+  ws.send(last_save_cmd);
+  ws.send(last_xpos_cmd);
+  ws.send(last_xsize_cmd);
+  ws.send(last_ypos_cmd);
+  ws.send(last_ysize_cmd);
 
 });
 
+// For each connected client, broadcast a message
 wss.broadcast = function broadcast(data) {
   wss.clients.forEach(function each(client) {
     client.send(data);
   });
-};
+}; 
 
 function HandleCommands (cmd) {
 
@@ -75,27 +99,58 @@ function HandleCommands (cmd) {
 
     case 'V':
       last_view_cmd = cmd;
-      broadcast = 1;
-      opencv = 1;
-      console.log(`Got view cmd`);
+      break;
+
+    case '%':
+      last_overlay_cmd = cmd;
+      break;
+
+    case 'O':
+      last_flipx_cmd = cmd;
+      break;
+
+    case 'U':
+      last_flipy_cmd = cmd;
+      break;
+
+    case 'M':
+      last_face_cmd = cmd;
+      break;
+
+    case 'C':
+      last_color_cmd = cmd;
+      break;
+
+    case 'S':
+      last_save_cmd = cmd;
+      break;  
+
+    case 'X':
+      last_xpos_cmd = cmd;
+      break;
+
+    case 'x':
+      last_xsize_cmd = cmd;
+      break;
+
+    case 'Y':
+      last_ypos_cmd = cmd;
+      break;
+
+    case 'y':
+      last_ysize_cmd = cmd;
       break;
 
     default:
       console.log(`Got unknown cmd`);
-      break;
+      return;
   }
 
   // Send command to all other clients
-  if (broadcast) {
-    console.log(`Broadcast`);
-    wss.broadcast(cmd);
-  }
+  wss.broadcast(cmd);
 
   // Send command back to OpenCV
-  if (opencv) {
-    console.log(`OpenCV`);
-    var buf = Buffer(cmd);
-    cli_sock.send(buf , 0, buf.length, cli_path);
-  }
+  var buf = Buffer(cmd);
+  cli_sock.send(buf , 0, buf.length, cli_path);
 
 } 
