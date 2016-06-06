@@ -30,6 +30,20 @@ def validate_targets(targets, rois):
 
     return found, remaining
 
+'''
+    Used once a face is found to find the neck.
+    Arguments:
+    @image: The entire image. Multiple faces is fine, as there should be only one face processed per function call.
+    @roi: The Region of Interest describing the location of the face.
+    @return: The neck corresponding to the detected face.
+'''
+def find_neck(self, image):
+    neckdim = ( self.roi[0]+(self.roi[2]/4), self.roi[1]+self.roi[3], self.roi[2]/2, self.roi[3]/2 )
+    #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
+    #and width, and is centred (in x) on the middle of the face's ROI. This means the "corners" of the new ROI
+    #are at 1/4, 3/4x, and y, 3y/2. 
+    out_img = mask_image(image, neckdim)
+    return out_img, neckdim
 
 '''
 A class to represent tracked targets.
@@ -72,7 +86,7 @@ class target:
         @region: A new ROI for the object, if it has shifted. Optional.
         If no value is provided, defaults to previous value.
     '''    
-    def update_roi(self, lum, region=None):
+    def update_roi(self, region=None):
         if region == None or not validate_roi(region):
             #At the point there are two options. We can reuse the previous ROI (attribute in place for this)
             #Alternately we can attempt to extrapolate the position. This will likely produce worse results,
@@ -86,13 +100,35 @@ class target:
             self.roi = region
             self.delta = self.roi[2]/2
             self.timer = 5# reset the timer
+
+    
+    '''
+        Arguments:
+        @image: A numpy ndarray representation of an image. When being fed to this,
+        typically should be cropped for a region of interest.
+        @return: The average luminance of the region.
+    '''
+    def mean_luminance(self, image):
+
+        if (len(image.shape) == 3):
+            image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YCR_CB)
+            image_y = image_yuv[0]
+        else:
+            # Just take the luminence of the raw IR feed? Research shows that the gray channel == Y channel
+            image_y = image
+
+        val = cv2.mean(image_y)[0]
+        return val
+
+    def update_lum(self, image)
+        
+        lum = self.mean_luminance(self.find_neck(image)[0])
         if len(self.history) < 100:
             self.history.append(lum)
         else:
             #At least 100 samples. We can do some analysis reliably.
             self.history.pop()#Discard oldest term
             self.history.append(lum)
-       
     '''
         Find the dominant frequency, typically this translates to the heartbeat.
         There is likely a lot of low frequency response, which needs to be ignored.
@@ -102,31 +138,32 @@ class target:
         @return: Dominant frequency (BPM). May not be lower than 40BPM. Rounded to integer.
     '''
     def find_frequency(self):
-        spectrum = np.fft.fft(self.history)
-        Ts = numpy.average(numpy.diff(self.timestamp))
-        frequencies =  np.fft.fftfreq(len(history), Ts)
-        #Discard negative frequencies, and associated peaks - not interested.
-        ############HERE BE ARBITRATION, SUBJECT TO CHANGE##################
-        #There are a few large, low frequency components to the FLIR data (DC is *HUGE*).
-        #This can be either due to the FLIR recently starting up, or (hopefully infrequent) 
-        #ambient temperature changes that it equalises. These *WILL* mess up our spectral 
-        #analysis, so we are going to discard anything that is close to, or below 
-        #40BPM (0.6666Hz), as this is pushing it for resting heart rate.
-        #####################ARBITRARY SPEEL OVER.#########################
-        pos_freq =  [f for f in frequencies if f > 0]
-        #This uses a bit of trickery from the way that np.fft.fftfreq constructs its
-        #array of frequencies. All positive frequencies are added to the array, then the
-        #negative frequencies. This means we can avoid having to process the negative
-        #frequencies at all, save for one.
+        if len(self.history) > 30:
+            spectrum = np.fft.fft(self.history)
+            Ts = numpy.average(numpy.diff(self.timestamp))
+            frequencies =  np.fft.fftfreq(len(history), Ts)
+            #Discard negative frequencies, and associated peaks - not interested.
+            ############HERE BE ARBITRATION, SUBJECT TO CHANGE##################
+            #There are a few large, low frequency components to the FLIR data (DC is *HUGE*).
+            #This can be either due to the FLIR recently starting up, or (hopefully infrequent) 
+            #ambient temperature changes that it equalises. These *WILL* mess up our spectral 
+            #analysis, so we are going to discard anything that is close to, or below 
+            #40BPM (0.6666Hz), as this is pushing it for resting heart rate.
+            #####################ARBITRARY SPEEL OVER.#########################
+            pos_freq =  [f for f in frequencies if f > 0]
+            #This uses a bit of trickery from the way that np.fft.fftfreq constructs its
+            #array of frequencies. All positive frequencies are added to the array, then the
+            #negative frequencies. This means we can avoid having to process the negative
+            #frequencies at all, save for one.
 
-        spectrum = spectrum[:]#truncate the spectrum appropriately
-        #Now we truncate for the lower frequencies at 0.7Hz
-        final_freq = [f for f in pos_freq if f > 0.7]
-        spectrum = spectrum[len(pos_freq)-len(final_freq)+1:len(pos_freq)-1]#no +1 previously
-        final_freq = final_freq[len(final_freq)-len(spectrum):] #does not exist previously - forces matching of spectrum and frequency array lengths
-        abs_spec = np.absolute(spectrum)
-        max_val = np.amax(abs_spec)
-        max_index = np.where(abs_spec==max_val)[0][0]
-        maxfreq = final_freq[max_index]
-        self.rate = int(maxfreq*60)
-        #return int(maxfreq*60) #Return a floored (integer) representation of the frequency in BPM
+            spectrum = spectrum[:]#truncate the spectrum appropriately
+            #Now we truncate for the lower frequencies at 0.7Hz
+            final_freq = [f for f in pos_freq if f > 0.7]
+            spectrum = spectrum[len(pos_freq)-len(final_freq)+1:len(pos_freq)-1]#no +1 previously
+            final_freq = final_freq[len(final_freq)-len(spectrum):] #does not exist previously - forces matching of spectrum and frequency array lengths
+            abs_spec = np.absolute(spectrum)
+            max_val = np.amax(abs_spec)
+            max_index = np.where(abs_spec==max_val)[0][0]
+            maxfreq = final_freq[max_index]
+            self.rate = int(maxfreq*60)
+            #return int(maxfreq*60) #Return a floored (integer) representation of the frequency in BPM
