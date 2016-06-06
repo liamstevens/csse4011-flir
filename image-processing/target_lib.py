@@ -14,21 +14,23 @@ def validate_targets(targets, rois):
     # Iterate through all targets (check for for valid rois, put them in)
     for item in targets:
 
-        print "item: " + str(item.roi)
+        roi_not_found = True
 
-        for roi in remaining:
+        for idx, roi in enumerate(remaining):
 
-            print "roi: " + str(roi)
-            roi_not_found = True
-            
             # Pop from list if roi is valid
             if item.validate_roi(roi):
-                found.append(remaining.pop(roi))
+                found.append(remaining.pop(idx))
                 roi_not_found = False
                 break
 
-        # If no valid rois found, just add empty element
+            # If no valid rois found, just add empty element
         if roi_not_found:
+            found.append(None)
+
+    return found, remaining
+
+
 '''
 A class to represent tracked targets.
     @history: A list of luminance values.
@@ -61,7 +63,7 @@ class target:
         for i in range(0,3):
             if abs(self.roi[i]-roi[i]) > self.delta:
                 return False
-        return true
+        return True
         
     '''
         Update the region of interest stored.
@@ -82,7 +84,7 @@ class target:
         else:
             self.previous_roi = self.roi
             self.roi = region
-            self.delta = self.roi[3]/2
+            self.delta = self.roi[2]/2
             self.timer = 5# reset the timer
         if len(self.history) < 100:
             self.history.append(lum)
