@@ -290,14 +290,14 @@ def do_measurement(image, detections):
     fnf = found + not_found
 
     for idx, t in enumerate(targets): 
-        print "Target " + str(idx) + " with ROI: " + str(t.roi) + " updating to " + str(fnf[idx]) 
+        # print "Target " + str(idx) + " with ROI: " + str(t.roi) + " updating to " + str(fnf[idx]) 
         t.update_roi(fnf[idx])
         t.update_lum(image[:,:,3])
         t.find_frequency()
         print "Rate: " + str(t.rate) +" (Samples: (" + str(len(t.history)) + ")"
         if (t.rate < 50):
             msg = msg + "User " + str(idx) + " detecting heart rate\r\n"
-        else
+        else:
             msg = msg + "User " + str(idx) + " has heart rate of " + str(t.rate) + "\r\n"
     
     if (len(targets) == 0):
