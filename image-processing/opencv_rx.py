@@ -29,7 +29,7 @@ flipy = 1
 
 x_pos  = 40
 x_size = 240
-y_pos  = 0
+y_pos  = 10
 y_size = 200
 
 jpg_quality = 95
