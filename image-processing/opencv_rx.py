@@ -267,14 +267,19 @@ def resize_flir_image(image):
 # Empty function, will be used for heartbeat measurement
 def do_measurement(image, detections):
 
+    #necks = []
+
     for idx, d in enumerate(detections):
         neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
         
         if (len(neck_img) == 0):
             print "NONE"
             continue
+        #necks.append(neck_roi)
 
         print fpl.mean_luminance(neck_img)
+
+    #fpl.detections_draw(image, necks)
 
     if (len(detections) == 0):
         return "No heartbeats detected"
