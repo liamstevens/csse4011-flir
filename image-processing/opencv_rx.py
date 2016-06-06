@@ -290,15 +290,15 @@ def do_measurement(image, detections):
     for r in not_found:
         targets.append(tl.target(r,0))
 
-    for t in targets:
-        print t.roi
-
     fnf = found + not_found
 
     for idx, t in enumerate(targets): 
         print "Target " + str(idx) + " with ROI: " + str(t.roi) + " updating to " + str(fnf[idx]) 
         t.update_roi(fnf[idx])
-
+        t.update_lum(image[:,:,3])
+        t.find_frequency()
+        print "Rate: " + str(t.rate) +" (Samples: (" + str(len(t.history)) + ")"
+    
     # for idx, d in enumerate(detections):
     #     neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
         

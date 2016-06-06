@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 
+import flir_process_lib as fpl
+
 from collections import deque
 
 def sort_targets(targets):
@@ -77,7 +79,7 @@ class target:
         #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
         #and width, and is centred (in x) on the middle of the face's ROI. This means the "corners" of the new ROI
         #are at 1/4, 3/4x, and y, 3y/2. 
-        out_img = mask_image(image, neckdim)
+        out_img = fpl.mask_image(image, neckdim)
         return out_img, neckdim
     '''
         Update the region of interest stored.
@@ -87,7 +89,7 @@ class target:
         If no value is provided, defaults to previous value.
     '''    
     def update_roi(self, region=None):
-        if region == None or not validate_roi(region):
+        if region == None or not self.validate_roi(region):
             #At the point there are two options. We can reuse the previous ROI (attribute in place for this)
             #Alternately we can attempt to extrapolate the position. This will likely produce worse results,
             #So for now we will just use the previous value
@@ -120,7 +122,7 @@ class target:
         val = cv2.mean(image_y)[0]
         return val
 
-    def update_lum(self, image)
+    def update_lum(self, image):
         
         lum = self.mean_luminance(self.find_neck(image)[0])
         if len(self.history) < 100:
@@ -140,8 +142,9 @@ class target:
     def find_frequency(self):
         if len(self.history) > 30:
             spectrum = np.fft.fft(self.history)
-            Ts = numpy.average(numpy.diff(self.timestamp))
-            frequencies =  np.fft.fftfreq(len(history), Ts)
+            Ts = np.average(np.diff(self.timestamp))
+            Ts = 0.125
+            frequencies =  np.fft.fftfreq(len(self.history), Ts)
             #Discard negative frequencies, and associated peaks - not interested.
             ############HERE BE ARBITRATION, SUBJECT TO CHANGE##################
             #There are a few large, low frequency components to the FLIR data (DC is *HUGE*).
@@ -156,7 +159,7 @@ class target:
             #negative frequencies. This means we can avoid having to process the negative
             #frequencies at all, save for one.
 
-            spectrum = spectrum[:]#truncate the spectrum appropriately
+            #spectrum = spectrum[:]#truncate the spectrum appropriately
             #Now we truncate for the lower frequencies at 0.7Hz
             final_freq = [f for f in pos_freq if f > 0.7]
             spectrum = spectrum[len(pos_freq)-len(final_freq)+1:len(pos_freq)-1]#no +1 previously
