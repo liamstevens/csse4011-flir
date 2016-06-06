@@ -15,6 +15,7 @@ class target:
         self.history = deque([])
         self.timestamp = deque([])
         self.roi = area
+        self.delta = (self.roi[3]-self.roi[0])/2
         self.previous_roi = None
         self.ID = ID
         self.timer = 5
@@ -22,14 +23,15 @@ class target:
         
     '''
         Find whether the new ROI is valid. This is pretty primitive, just checks if
-        the ROI is reasonable (not a large change in position). 
+        the ROI is reasonable (not a large change in position). Delta is tunable
+        (set to half width of ROI currently)
         Arguments:
         @roi: The new ROI to validate.
         @delta: A tunable value, to specify the maximum change that is permissible.
     '''
-    def validate_roi(self, roi, delta):
+    def validate_roi(self, roi):
         for i in range(0,3):
-            if abs(self.roi[i]-roi[i]) > delta:
+            if abs(self.roi[i]-roi[i]) > self.delta:
                 return false
         return true
         
@@ -41,7 +43,7 @@ class target:
         If no value is provided, defaults to previous value.
     '''    
     def update_roi(self, lum, region=None):
-        if region == None:
+        if region == None or not validate_roi(region):
             #At the point there are two options. We can reuse the previous ROI (attribute in place for this)
             #Alternately we can attempt to extrapolate the position. This will likely produce worse results,
             #So for now we will just use the previous value
@@ -52,6 +54,8 @@ class target:
         else:
             self.previous_roi = self.roi
             self.roi = region
+            self.delta = (self.roi[3]-self.roi[0])/2
+            self.timer = 5# reset the timer
         if len(self.history) < 100:
             self.history.append(lum)
         else:
@@ -94,4 +98,5 @@ class target:
         max_val = np.amax(abs_spec)
         max_index = np.where(abs_spec==max_val)[0][0]
         maxfreq = final_freq[max_index]
-        return int(maxfreq*60) #Return a floored (integer) representation of the frequency in BPM
+        self.rate = int(maxfreq*60)
+        #return int(maxfreq*60) #Return a floored (integer) representation of the frequency in BPM
