@@ -8,6 +8,8 @@ import calendar, time
 import cv2
 import numpy as np
 
+from collections import deque
+
 import flir_process_lib as fpl
 import target_lib as tl
 
@@ -264,14 +266,31 @@ def resize_flir_image(image):
     return cv2.resize(image, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
 
 
-targets = ()
+targets = []
 
 # Empty function, will be used for heartbeat measurement
 def do_measurement(image, detections):
 
+    global targets
+
     targets = tl.sort_targets(targets)
 
-    #necks = []
+    print "det: " + str(detections)
+
+    found, not_found = tl.validate_targets(targets, detections)
+
+    print "Found: " + str(found)
+    print "Not Found: " + str(not_found)
+
+    for r in found:
+        pass
+
+    for r in not_found:
+        targets.append(tl.target(r,0))
+
+    for t in targets:
+        print t.roi
+
 
     for idx, d in enumerate(detections):
         neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
@@ -279,11 +298,8 @@ def do_measurement(image, detections):
         if (len(neck_img) == 0):
             print "NONE"
             continue
-        #necks.append(neck_roi)
 
         print fpl.mean_luminance(neck_img)
-
-    #fpl.detections_draw(image, necks)
 
     if (len(detections) == 0):
         return "No heartbeats detected"

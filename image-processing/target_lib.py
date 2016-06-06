@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
-#import "flir_process_lib.py"
+
+from collections import deque
 
 def sort_targets(targets):
     return sorted(targets, key=lambda x: (-x.timer, x.roi[0]))
@@ -12,18 +13,23 @@ def validate_targets(targets, rois):
 
     # Iterate through all targets (check for for valid rois, put them in)
     for item in targets:
+
+        print "item: " + str(item.roi)
+
         for roi in remaining:
+
+            print "roi: " + str(roi)
             roi_not_found = True
             
             # Pop from list if roi is valid
             if item.validate_roi(roi):
-                found.add(remaining.pop(roi))
+                found.append(remaining.pop(roi))
                 roi_not_found = False
                 break
 
         # If no valid rois found, just add empty element
         if roi_not_found:
-            found.add(None)
+            found.append(None)
 
     return found, remaining
 
@@ -58,7 +64,7 @@ class target:
     def validate_roi(self, roi):
         for i in range(0,3):
             if abs(self.roi[i]-roi[i]) > self.delta:
-                return false
+                return False
         return true
         
     '''
