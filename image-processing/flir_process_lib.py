@@ -72,7 +72,7 @@ def find_frequency(arr, Ts):
     @return: The neck corresponding to the detected face.
 '''
 def find_neck(image, roi):
-    neckdim = ((roi[0]+((roi[2]-roi[0])/4)),roi[3],(roi[2]-((roi[2]-roi[0])/4)), (roi[3]+((roi[3]-roi[1])/2)))
+    neckdim = ( roi[0]+(roi[2]/4), roi[1]+roi[3], roi[2]/2, roi[3]/2 )
     #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
     #and width, and is centred (in x) on the middle of the face's ROI. This means the "corners" of the new ROI
     #are at 1/4, 3/4x, and y, 3y/2. 

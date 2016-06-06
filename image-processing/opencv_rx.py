@@ -25,12 +25,12 @@ output_view = 3
 overlay_pc = 30
 
 flipx = 0
-flipy = 0
+flipy = 1
 
-x_pos  = 0
-x_size = 80
-y_pos  = 0
-y_size = 60
+x_pos  = 40
+x_size = 240
+y_pos  = 10
+y_size = 200
 
 jpg_quality = 95
 mkdir = 0
@@ -264,8 +264,14 @@ def resize_flir_image(image):
     return cv2.resize(image, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
 
 
+targets = ()
+
 # Empty function, will be used for heartbeat measurement
 def do_measurement(image, detections):
+
+    targets = tl.sort_targets(targets)
+
+    #necks = []
 
     for idx, d in enumerate(detections):
         neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
@@ -273,8 +279,11 @@ def do_measurement(image, detections):
         if (len(neck_img) == 0):
             print "NONE"
             continue
+        #necks.append(neck_roi)
 
         print fpl.mean_luminance(neck_img)
+
+    #fpl.detections_draw(image, necks)
 
     if (len(detections) == 0):
         return "No heartbeats detected"
