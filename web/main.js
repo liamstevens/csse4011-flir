@@ -12,7 +12,7 @@ cli_path = "/run/shm/node2cv"
 /* WEB SERVER */
 app.use(express.static('public'));
 
-app.listen(8080, function () {
+app.listen(12500, function () {
   console.log('Example app listening on port 8080!');
 });
 

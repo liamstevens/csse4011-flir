@@ -34,7 +34,7 @@ node $NODE_FILE > node.log 2>&1 &
 NODE_PID=$!
 cd ..
 
-sleep 2
+sleep 3
 if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 	echo "Node Server Started OK"
 
@@ -44,7 +44,7 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 	OPENCV_PID=$!
 	cd ..
 
-	sleep 2
+	sleep 3
 	if kill -0 "$OPENCV_PID" >/dev/null 2>&1 ; then
 		echo "OpenCV Script Started OK"
 
@@ -54,17 +54,20 @@ if kill -0 "$NODE_PID" >/dev/null 2>&1 ; then
 		PICAM_PID=$!
 		cd ..
 
-		sleep 2
+		sleep 3
 		if kill -0 "$PICAM_PID" >/dev/null 2>&1 ; then
 			echo "Pi Camera Started OK"
 
 			# Run the FLIR
 			cd $CAP_PATH
+
+			./agcenable.exe
+
 			./$FLIR_FILE > flir.log 2>&1 &
 			FLIR_PID=$!
 			cd ..
 
-			sleep 2
+			sleep 3
 			if kill -0 "$FLIR_PID" >/dev/null 2>&1 ; then
 				echo "FLIR Camera Started OK"
 
