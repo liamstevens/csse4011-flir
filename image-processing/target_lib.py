@@ -20,8 +20,26 @@ class target:
         self.timer = 5
         self.rate = 0
         
+    '''
+        Find whether the new ROI is valid. This is pretty primitive, just checks if
+        the ROI is reasonable (not a large change in position). 
+        Arguments:
+        @roi: The new ROI to validate.
+        @delta: A tunable value, to specify the maximum change that is permissible.
+    '''
+    def validate_roi(self, roi, delta):
+        for i in range(0,3):
+            if abs(self.roi[i]-roi[i]) > delta:
+                return false
+        return true
         
-    #Update the region of interest stored    
+    '''
+        Update the region of interest stored.
+        Arguments:
+        @lum: a luminance value to append to history.
+        @region: A new ROI for the object, if it has shifted. Optional.
+        If no value is provided, defaults to previous value.
+    '''    
     def update_roi(self, lum, region=None):
         if region == None:
             #At the point there are two options. We can reuse the previous ROI (attribute in place for this)
@@ -68,9 +86,10 @@ class target:
         #frequencies at all, save for one.
 
         spectrum = spectrum[:]#truncate the spectrum appropriately
-        #Now we truncate for the lower frequencies at 0.666Hz
-        final_freq = [f for f in pos_freq if f > 0.666]
-        spectrum = spectrum[len(pos_freq)-len(final_freq):len(pos_freq)-1]
+        #Now we truncate for the lower frequencies at 0.7Hz
+        final_freq = [f for f in pos_freq if f > 0.7]
+        spectrum = spectrum[len(pos_freq)-len(final_freq)+1:len(pos_freq)-1]#no +1 previously
+        final_freq = final_freq[len(final_freq)-len(spectrum):] #does not exist previously - forces matching of spectrum and frequency array lengths
         abs_spec = np.absolute(spectrum)
         max_val = np.amax(abs_spec)
         max_index = np.where(abs_spec==max_val)[0][0]

@@ -4,7 +4,6 @@ from scipy.signal import savgol_filter
 
 
 
-
 #Function to draw lines around objects of at least llim intensity
 def threshold_contour(image, ulim, llim):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -57,7 +56,8 @@ def find_frequency(arr, Ts):
     #frequencies at all, save for one.
     #Now we truncate for the lower frequencies at 0.666Hz
     final_freq = [f for f in pos_freq if f > 0.7]
-    spectrum = spectrum[(len(pos_freq)-len(final_freq)):len(pos_freq)-1]
+    spectrum = spectrum[(len(pos_freq)-len(final_freq))+1:len(pos_freq)-1] #no +1 previously
+    final_freq = final_freq[len(final_freq)-len(spectrum):] #does not exist previously
     abs_spec = np.absolute(spectrum)
     max_val = np.amax(abs_spec)
     max_index = np.where(abs_spec==max_val)
