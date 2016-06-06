@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np 
 import cv2
 
 from scipy.signal import savgol_filter
@@ -6,6 +6,7 @@ from scipy.signal import savgol_filter
 import flir_process_lib as fpl
 
 from collections import deque
+
 
 def sort_targets(targets):
     return sorted(targets, key=lambda x: (-x.timer, x.roi[0]))
@@ -144,8 +145,14 @@ class target:
     '''
     def find_frequency(self):
         if (len(self.history) > 30) and ((self.counter % 10) == 0):
-            history_d = savgol_filter(self.history,21,5,deriv=1)
-            spectrum = np.fft.fft(history_d)
+#            history_d0 = savgol_filter(self.history,21,5,deriv=0)            
+            history_d1 = savgol_filter(self.history,21,5,deriv=1)
+
+#            if (self.counter == 100):
+#                print("d0:"+str(history_d0))
+#                print("d1:"+str(history_d1))
+
+            spectrum = np.fft.fft(history_d1)
             Ts = np.average(np.diff(self.timestamp))
             Ts = 0.125
             frequencies =  np.fft.fftfreq(len(self.history), Ts)
