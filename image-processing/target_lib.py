@@ -14,7 +14,7 @@ def sort_targets(targets):
 def validate_targets(targets, rois):
 
     found = []
-    remaining = rois
+    remaining = list(rois)
 
     # Iterate through all targets (check for for valid rois, put them in)
     for item in targets:
@@ -129,7 +129,7 @@ class target:
     def update_lum(self, image):
         
         lum = self.mean_luminance(self.find_neck(image)[0])
-        if len(self.history) < 100:
+        if len(self.history) < 200:
             self.history.append(lum)
         else:
             #At least 100 samples. We can do some analysis reliably.
@@ -146,7 +146,7 @@ class target:
     def find_frequency(self):
         if (len(self.history) > 30) and ((self.counter % 10) == 0):
 #            history_d0 = savgol_filter(self.history,21,5,deriv=0)            
-            history_d1 = savgol_filter(self.history,21,5,deriv=1)
+            history_d1 = savgol_filter(self.history,13,5,deriv=1)
 
 #            if (self.counter == 100):
 #                print("d0:"+str(history_d0))
