@@ -273,16 +273,13 @@ def do_measurement(image, detections):
 
     global targets
 
+    msg = ""
+
     targets = [t for t in targets if (t.timer > 0)]
 
     targets = tl.sort_targets(targets)
 
-    print "det: " + str(detections)
-
     found, not_found = tl.validate_targets(targets, detections)
-
-    print "Found: " + str(found)
-    print "Not Found: " + str(not_found)
 
     for r in found:
         pass
@@ -298,20 +295,15 @@ def do_measurement(image, detections):
         t.update_lum(image[:,:,3])
         t.find_frequency()
         print "Rate: " + str(t.rate) +" (Samples: (" + str(len(t.history)) + ")"
+        if (t.rate < 50):
+            msg = msg + "User " + str(idx) + " detecting heart rate\r\n"
+        else
+            msg = msg + "User " + str(idx) + " has heart rate of " + str(t.rate) + "\r\n"
     
-    # for idx, d in enumerate(detections):
-    #     neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
-        
-    #     if (len(neck_img) == 0):
-    #         print "NONE"
-    #         continue
-
-    #     print fpl.mean_luminance(neck_img)
-
-    if (len(detections) == 0):
+    if (len(targets) == 0):
         return "No heartbeats detected"
     else:
-        return "Gathering heartbeats"
+        return msg
 
 def do_output(image, detections):
 
