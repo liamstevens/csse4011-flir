@@ -1,6 +1,8 @@
 import numpy as np 
 import cv2
 
+import time
+
 from scipy.signal import savgol_filter
 
 import flir_process_lib as fpl
@@ -53,9 +55,10 @@ class target:
         self.delta = self.roi[2]/2
         self.previous_roi = None
         self.ID = ID
-        self.timer = 5
+        self.timer = 10
         self.rate = 0
         self.counter = 0
+        self.epoch = time.time()
         
     '''
         Find whether the new ROI is valid. This is pretty primitive, just checks if
@@ -105,7 +108,7 @@ class target:
             self.previous_roi = self.roi
             self.roi = region
             self.delta = self.roi[2]/2
-            self.timer = 5# reset the timer
+            self.timer = 10# reset the timer
 
     
     '''
@@ -129,12 +132,14 @@ class target:
     def update_lum(self, image):
         
         lum = self.mean_luminance(self.find_neck(image)[0])
-        if len(self.history) < 200:
-            self.history.append(lum)
-        else:
+        if len(self.history) >= 200:
             #At least 100 samples. We can do some analysis reliably.
-            self.history.popleft()#Discard oldest term
-            self.history.append(lum)
+            self.history.popleft() #Discard oldest term
+            self.timestamp.popleft()
+
+        self.history.append(lum)
+        self.timestamp.append((time.time()-self.epoch)*1000)
+
     '''
         Find the dominant frequency, typically this translates to the heartbeat.
         There is likely a lot of low frequency response, which needs to be ignored.
@@ -153,8 +158,9 @@ class target:
 #                print("d1:"+str(history_d1))
 
             spectrum = np.fft.fft(history_d1)
-            Ts = np.average(np.diff(self.timestamp))
-            Ts = 0.125
+            Ts = np.average(np.diff(self.timestamp))/1000.0
+            #Ts = 0.125
+            print "Ts: " + str(Ts)
             frequencies =  np.fft.fftfreq(len(self.history), Ts)
             #Discard negative frequencies, and associated peaks - not interested.
             ############HERE BE ARBITRATION, SUBJECT TO CHANGE##################
