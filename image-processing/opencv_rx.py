@@ -273,6 +273,8 @@ def do_measurement(image, detections):
 
     global targets
 
+    targets = [t for t in targets if (t.timer > 0)]
+
     targets = tl.sort_targets(targets)
 
     print "det: " + str(detections)
@@ -291,15 +293,20 @@ def do_measurement(image, detections):
     for t in targets:
         print t.roi
 
+    fnf = found + not_found
 
-    for idx, d in enumerate(detections):
-        neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
+    for idx, t in enumerate(targets): 
+        print "Target " + str(idx) + " with ROI: " + str(t.roi) + " updating to " + str(fnf[idx]) 
+        t.update_roi(fnf[idx])
+
+    # for idx, d in enumerate(detections):
+    #     neck_img, neck_roi = fpl.find_neck(image[:,:,3], d)
         
-        if (len(neck_img) == 0):
-            print "NONE"
-            continue
+    #     if (len(neck_img) == 0):
+    #         print "NONE"
+    #         continue
 
-        print fpl.mean_luminance(neck_img)
+    #     print fpl.mean_luminance(neck_img)
 
     if (len(detections) == 0):
         return "No heartbeats detected"
