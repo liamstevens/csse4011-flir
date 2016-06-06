@@ -30,20 +30,6 @@ def validate_targets(targets, rois):
 
     return found, remaining
 
-'''
-    Used once a face is found to find the neck.
-    Arguments:
-    @image: The entire image. Multiple faces is fine, as there should be only one face processed per function call.
-    @roi: The Region of Interest describing the location of the face.
-    @return: The neck corresponding to the detected face.
-'''
-def find_neck(self, image):
-    neckdim = ( self.roi[0]+(self.roi[2]/4), self.roi[1]+self.roi[3], self.roi[2]/2, self.roi[3]/2 )
-    #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
-    #and width, and is centred (in x) on the middle of the face's ROI. This means the "corners" of the new ROI
-    #are at 1/4, 3/4x, and y, 3y/2. 
-    out_img = mask_image(image, neckdim)
-    return out_img, neckdim
 
 '''
 A class to represent tracked targets.
@@ -79,6 +65,20 @@ class target:
                 return False
         return True
         
+    '''
+        Used once a face is found to find the neck.
+        Arguments:
+        @image: The entire image. Multiple faces is fine, as there should be only one face processed per function call.
+        @roi: The Region of Interest describing the location of the face.
+        @return: The neck corresponding to the detected face.
+    '''
+    def find_neck(self, image):
+        neckdim = ( self.roi[0]+(self.roi[2]/4), self.roi[1]+self.roi[3], self.roi[2]/2, self.roi[3]/2 )
+        #This is very opaque but I think is the best way to do it. The region of the neck is half the height 
+        #and width, and is centred (in x) on the middle of the face's ROI. This means the "corners" of the new ROI
+        #are at 1/4, 3/4x, and y, 3y/2. 
+        out_img = mask_image(image, neckdim)
+        return out_img, neckdim
     '''
         Update the region of interest stored.
         Arguments:
