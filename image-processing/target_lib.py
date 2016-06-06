@@ -1,32 +1,6 @@
 import numpy as np
 import cv2
 #import "flir_process_lib.py"
-
-def sort_targets(targets):
-    return sorted(targets, key=lambda x: (-x.timer, x.roi[0]))
-
-def validate_targets(targets, rois):
-
-    found = []
-    remaining = rois
-
-    # Iterate through all targets (check for for valid rois, put them in)
-    for item in targets:
-        for roi in remaining:
-            roi_not_found = True
-            
-            # Pop from list if roi is valid
-            if item.validate_roi(roi):
-                found.add(remaining.pop(roi))
-                roi_not_found = False
-                break
-
-        # If no valid rois found, just add empty element
-        if roi_not_found:
-            found.add(None)
-
-    return found, remaining
-
 '''
 A class to represent tracked targets.
     @history: A list of luminance values.
@@ -41,7 +15,7 @@ class target:
         self.history = deque([])
         self.timestamp = deque([])
         self.roi = area
-        self.delta = (self.roi[3]-self.roi[0])/2
+        self.delta = self.roi[2]/2
         self.previous_roi = None
         self.ID = ID
         self.timer = 5
