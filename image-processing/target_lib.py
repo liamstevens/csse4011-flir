@@ -29,10 +29,6 @@ def validate_targets(targets, rois):
 
         # If no valid rois found, just add empty element
         if roi_not_found:
-            found.append(None)
-
-    return found, remaining
-
 '''
 A class to represent tracked targets.
     @history: A list of luminance values.
@@ -47,7 +43,7 @@ class target:
         self.history = deque([])
         self.timestamp = deque([])
         self.roi = area
-        self.delta = (self.roi[3]-self.roi[0])/2
+        self.delta = self.roi[2]/2
         self.previous_roi = None
         self.ID = ID
         self.timer = 5

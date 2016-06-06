@@ -140,9 +140,9 @@ def face_cascade(cascade, image, gflag=True):
         gray = image
     unsorted = cascade.detectMultiScale(gray, scaleFactor = 1.5, minNeighbors = 5, minSize = (30, 30), flags = cv2.CASCADE_SCALE_IMAGE)
     sorted_cascade = sorted(unsorted, key=get_first)
-    for i in range(0, len(sorted_cascade)-1):
+    for i in range(0, len(sorted_cascade)):
         if i > 0:
-            if sorted_cascade[i][0] < (sorted_cascade[i-1][0]+sorted_cascade[i-1][2])/2:
+            if sorted_cascade[i][0] < (sorted_cascade[i-1][0]+(sorted_cascade[i-1][2]/2)):
                 sorted_cascade.pop(i)
     return sorted_cascade
 
