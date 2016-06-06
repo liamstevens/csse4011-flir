@@ -264,8 +264,12 @@ def resize_flir_image(image):
     return cv2.resize(image, (x_size, y_size), interpolation = cv2.INTER_CUBIC)
 
 
+targets = ()
+
 # Empty function, will be used for heartbeat measurement
 def do_measurement(image, detections):
+
+    targets = tl.sort_targets(targets)
 
     #necks = []
 

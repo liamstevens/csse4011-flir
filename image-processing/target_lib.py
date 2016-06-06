@@ -1,6 +1,10 @@
 import numpy as np
 import cv2
 #import "flir_process_lib.py"
+
+def sort_targets(targets):
+    return sorted(targets, key=lambda x: (-x.timer, x.roi[0]))
+
 '''
 A class to represent tracked targets.
     @history: A list of luminance values.
