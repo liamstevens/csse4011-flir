@@ -80,7 +80,7 @@ class target:
         else:
             self.previous_roi = self.roi
             self.roi = region
-            self.delta = (self.roi[3]-self.roi[0])/2
+            self.delta = self.roi[3]/2
             self.timer = 5# reset the timer
         if len(self.history) < 100:
             self.history.append(lum)

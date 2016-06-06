@@ -129,6 +129,8 @@ def overlay(im1, im2):
     ret = cv2.addWeighted(scaled, 0.3, im2, 0.7, 0)
     return ret
 
+def get_first(lis):
+    return lis[0]
 
 def face_cascade(cascade, image, gflag=True):
     if not gflag:
@@ -136,9 +138,13 @@ def face_cascade(cascade, image, gflag=True):
         gray = cv2.equalizeHist(gray)
     else:
         gray = image
-
-    return cascade.detectMultiScale(gray, scaleFactor = 1.5, minNeighbors = 5, minSize = (30, 30), flags = cv2.CASCADE_SCALE_IMAGE)
-
+    unsorted = cascade.detectMultiScale(gray, scaleFactor = 1.5, minNeighbors = 5, minSize = (30, 30), flags = cv2.CASCADE_SCALE_IMAGE)
+    sorted_cascade = sorted(unsorted, key=get_first)
+    for i in range(0, len(sorted_cascade)-1):
+        if i > 0:
+            if sorted_cascade[i][0] < (sorted_cascade[i-1][0]+sorted_cascade[i-1][2])/2:
+                sorted_cascade.pop(i)
+    return sorted_cascade
 
 def detections_draw(image, detections):
     for (x, y, w, h) in detections:
