@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 
+from scipy.signal import savgol_filter
+
 import flir_process_lib as fpl
 
 from collections import deque
@@ -52,6 +54,7 @@ class target:
         self.ID = ID
         self.timer = 5
         self.rate = 0
+        self.counter = 0
         
     '''
         Find whether the new ROI is valid. This is pretty primitive, just checks if
@@ -129,7 +132,7 @@ class target:
             self.history.append(lum)
         else:
             #At least 100 samples. We can do some analysis reliably.
-            self.history.pop()#Discard oldest term
+            self.history.popleft()#Discard oldest term
             self.history.append(lum)
     '''
         Find the dominant frequency, typically this translates to the heartbeat.
@@ -140,8 +143,9 @@ class target:
         @return: Dominant frequency (BPM). May not be lower than 40BPM. Rounded to integer.
     '''
     def find_frequency(self):
-        if len(self.history) > 30:
-            spectrum = np.fft.fft(self.history)
+        if (len(self.history) > 30) and ((self.counter % 10) == 0):
+            history_d = savgol_filter(self.history,21,5,deriv=1)
+            spectrum = np.fft.fft(history_d)
             Ts = np.average(np.diff(self.timestamp))
             Ts = 0.125
             frequencies =  np.fft.fftfreq(len(self.history), Ts)
@@ -170,3 +174,4 @@ class target:
             maxfreq = final_freq[max_index]
             self.rate = int(maxfreq*60)
             #return int(maxfreq*60) #Return a floored (integer) representation of the frequency in BPM
+        self.counter = self.counter + 1
