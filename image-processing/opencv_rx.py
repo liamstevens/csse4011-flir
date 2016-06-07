@@ -70,12 +70,22 @@ def main():
             for fileno, event in events:
 
                 if (picam_rx.fileno() == fileno):
-                    jpg = picam_rx.recv(socket_buf_size)
-                    picam_ready = 1
+                    try:
+                        while True:
+                            data = picam_rx.recv(socket_buf_size)
+                            jpg = data
+                            picam_ready = 1
+                    except:
+                        pass
 
                 if (flir_rx.fileno() == fileno):
-                    pgm = flir_rx.recv(socket_buf_size)
-                    flir_ready = 1
+                    try:
+                        while True:
+                            data = flir_rx.recv(socket_buf_size)
+                            pgm = data
+                            flir_ready = 1
+                    except:
+                        pass
 
                 if (node_rx.fileno() == fileno):
                     cmd = node_rx.recv(socket_buf_size)
